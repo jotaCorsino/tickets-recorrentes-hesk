@@ -5,9 +5,9 @@
 | Código | Etapa | Objetivo | Status | Critério de saída |
 |---|---|---|---|---|
 | KB-001 | Fundação documental | Consolidar ambiente, regras e arquitetura inicial | CONCLUÍDO | Documentação inicial publicada |
-| ARC-001 | Arquitetura HESK | Confirmar fluxo nativo e estratégia de integração | AGUARDANDO_HOMOLOGACAO | Fluxo e restrições documentados |
+| ARC-001 | Arquitetura HESK | Confirmar fluxo nativo e estratégia de integração | CONCLUÍDO | Fluxo e restrições documentados |
 | BASE-001 | Baseline manual | Criar ticket de referência para comparação | CONCLUÍDO | Ticket 42 criado e validado visualmente |
-| POC-001 | Ticket único | Criar um ticket real de teste via CLI | PENDENTE | Ticket correto no HESK, sem notificação indevida |
+| POC-001 | Ticket único | Criar um ticket real de teste via CLI | CONCLUÍDO | Ticket correto no HESK, sem notificação indevida |
 | CFG-001 | Persistência | Modelar recorrências e execuções | PENDENTE | Estrutura persistente versionada |
 | SCH-001 | Scheduler | Detectar recorrências vencidas | PENDENTE | Execução por Cron reprodutível |
 | SAFE-001 | Idempotência | Evitar duplicações | PENDENTE | Retry não duplica lote |
@@ -36,29 +36,16 @@ Ticket manual de referência:
 
 Ver `docs/05-POC-MANUAL.md`.
 
-## Próxima tarefa
+## POC-001 homologada
 
-### POC-001 — Ticket único
+Em 02/10/2026, o modo `--check` foi executado no servidor real com `CHECK OK`, sem criação de ticket. Em seguida, uma única execução de `--execute` criou o ticket `43`, tracking ID `299-RY2-QZ4L`.
 
-Objetivo: validar a integração mínima com HESK 3.7.12.
+A conferência visual confirmou solicitante, categoria, prioridade, status, responsável, campos personalizados, assunto, mensagem e ausência de vencimento conforme a baseline manual. A implementação não chama a rotina de notificação ao solicitante.
 
-Cenário alvo: reproduzir via CLI a baseline manual documentada em `docs/05-POC-MANUAL.md`.
+## Próxima etapa
 
-Não implementar nesta tarefa:
+### CFG-001 — Persistência
 
-- Cron;
-- múltiplos tickets;
-- painel;
-- recorrência;
-- banco próprio;
-- edição por navegador.
+Objetivo: definir a estrutura persistente de recorrências e execuções, mantendo as decisões já validadas na POC.
 
-Critério de saída:
-
-1. script executável por CLI;
-2. ticket criado corretamente no HESK;
-3. campos personalizados corretos;
-4. owner correto;
-5. nenhuma notificação indevida ao solicitante;
-6. erro claro se parâmetros forem inválidos;
-7. nenhum arquivo do core do HESK alterado.
+A implementação desta etapa deverá preservar o princípio de não alterar o core do HESK e preparar a base para scheduler, idempotência e geração em lote.

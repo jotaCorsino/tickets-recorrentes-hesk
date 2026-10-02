@@ -99,9 +99,9 @@ Em `hesktx_permission_group_members`:
 | 3 | 2 |
 | 4 | 2 |
 
-O grupo 2 possui acesso às categorias:
+O grupo 2 possui acesso às categorias observadas no levantamento:
 
-`1, 2, 3, 4, 5, 6, 7, 8, 9`
+`1, 2, 3, 4, 5, 7, 8, 9`
 
 Portanto, **João Gabriel Silveira (3)** e **João Paulo Corsino (4)** possuem acesso à categoria `5 - WORKSTATION` por grupo de permissão e podem ser considerados responsáveis válidos para a POC.
 
