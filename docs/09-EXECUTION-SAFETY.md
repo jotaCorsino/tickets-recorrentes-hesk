@@ -1,6 +1,6 @@
 # 09 — Segurança e idempotência de execution
 
-**Status da SAFE-001:** `AGUARDANDO_HOMOLOGACAO`
+**Status da SAFE-001:** `CONCLUÍDO`
 
 ## Objetivo e limite
 
@@ -214,6 +214,78 @@ rm -f /home/tech2612/hesk-recorrencias/storage/safe-homolog.sqlite-shm
 ```
 
 Confirme que os três arquivos isolados foram removidos, `/home/tech2612/hesk-recorrencias/storage/app.sqlite` permaneceu intacto e nenhum ticket foi criado no HESK.
+
+## Resultado da homologação real
+
+A SAFE-001 foi homologada com sucesso no servidor real em 02/10/2026, usando somente o banco isolado:
+
+```text
+/home/tech2612/hesk-recorrencias/storage/safe-homolog.sqlite
+```
+
+O banco real `/home/tech2612/hesk-recorrencias/storage/app.sqlite` permaneceu intacto e nenhum ticket foi criado no HESK.
+
+### Migrations e scheduler
+
+A primeira execução aplicou `001_initial_schema` e `002_execution_leases`, com `foreign_keys=1` e `journal_mode=wal`. A segunda execução não aplicou nenhuma migration, confirmando a idempotência.
+
+A recorrência de homologação foi criada com ID `1` e `next_run_at=2026-10-01T12:00:00Z`. O scheduler processou uma recorrência, sem ignoradas ou erros, criou a execution `1` para a mesma competência e avançou `next_run_at` para `2027-10-01T12:00:00Z`.
+
+A execution inicial ficou com:
+
+- `status=pending`;
+- `expected_count=1` e `created_count=0`;
+- `attempt_count=0`;
+- início, fim, erro e dados de lease nulos.
+
+### Claim exclusivo e heartbeat
+
+`homolog-worker-a` obteve o primeiro claim, movendo a execution para `running`, com lease de 300 segundos e `attempt_count=1`. O token foi mantido somente em variável temporária da sessão.
+
+Enquanto esse lease estava válido, `homolog-worker-b` tentou assumir a mesma execution e recebeu:
+
+```text
+CLAIM NAO REALIZADO
+Motivo: active_lease
+```
+
+O heartbeat do worker A foi aprovado e renovou a expiração. `started_at` e `last_attempt_at` permaneceram associados ao início da tentativa, e o comando `show` não expôs `lease_token`.
+
+### Falha, retry e segunda tentativa
+
+A primeira tentativa foi finalizada como `failed`, com `error_message=falha controlada de homologação`. `finished_at` foi preenchido, o erro foi preservado e owner e expiração do lease foram limpos.
+
+O retry explícito reutilizou a execution ID `1` e confirmou:
+
+- mesmo `recurrence_id` e `scheduled_for`;
+- `attempt_count=1` preservado;
+- retorno a `pending`;
+- limpeza de `started_at`, `finished_at`, `error_message` e lease;
+- preservação de `last_attempt_at` como histórico da tentativa anterior.
+
+`homolog-worker-b` realizou o segundo claim, recebeu um novo token e elevou `attempt_count` para `2`.
+
+### Sucesso terminal
+
+A segunda tentativa terminou com `FINISH OK` e estado final:
+
+- `status=succeeded`;
+- `attempt_count=2`;
+- `created_count=0`;
+- `finished_at` preenchido;
+- erro, owner e expiração do lease nulos.
+
+O retry posterior foi recusado com `terminal_succeeded`, confirmando que `succeeded` é terminal.
+
+### Stale takeover
+
+O stale takeover por expiração do lease não foi reproduzido manualmente nesta homologação do cPanel. A implementação permanece coberta por `tests/safety.php`, que valida lease expirado, takeover por outro worker, novo token, incremento de tentativa e impossibilidade de heartbeat ou finish pelo token antigo.
+
+### Encerramento e isolamento
+
+A recorrência ID `1` foi deixada com `enabled=false`. `safe-homolog.sqlite` e os auxiliares `-wal` e `-shm` foram removidos; depois da limpeza, `storage` continha somente `app.sqlite`. As variáveis temporárias de token, claim e caminho do banco foram removidas da sessão.
+
+Com esses resultados, SAFE-001 está concluída. BATCH-001 permanece pendente e não foi iniciada.
 
 ## Testes locais
 
