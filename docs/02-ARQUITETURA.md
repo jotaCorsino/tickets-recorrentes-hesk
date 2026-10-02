@@ -81,9 +81,9 @@ O bootstrap da POC:
 
 Não há login ou sessão web, chamada HTTP ao formulário administrativo, alteração no core ou `INSERT` próprio na tabela de tickets.
 
-## Componentes previstos
+## Componentes implementados
 
-Na POC-001 foram implementados somente:
+Na POC-001 foram implementados:
 
 ```text
 bin/
@@ -95,7 +95,25 @@ src/
   HeskTicketCreator.php
 ```
 
-Os componentes de recorrência, scheduler, persistência, lote e interface permanecem fora desta tarefa.
+Na CFG-001 foram acrescentados, sem carregar o HESK:
+
+```text
+bin/
+  recurrence.php
+
+database/migrations/
+  001_initial_schema.sql
+
+src/
+  Database.php
+  MigrationRunner.php
+  RecurrenceCliOptions.php
+  RecurrenceValidator.php
+  RecurrenceRepository.php
+  RecurrenceExecutionRepository.php
+```
+
+O SQLite da aplicação é independente do MariaDB do HESK. SQL de domínio fica restrito às migrations e aos repositórios. Scheduler, cálculo de próximas datas, geração em lote e interface permanecem fora da CFG-001.
 
 ## Modelo conceitual da recorrência
 
@@ -146,12 +164,21 @@ recurrence_id + scheduled_for
 
 Antes de gerar qualquer lote, o motor verifica se aquela execução já foi processada.
 
+A CFG-001 já fornece a garantia estrutural `UNIQUE (recurrence_id, scheduled_for)`. Ela impede duas linhas para a mesma ocorrência programada, mas ainda não implementa a política completa de reserva, retry e retomada. Essa política pertence à SAFE-001.
+
 A proteção deve sobreviver a:
 
 - execução duplicada do Cron;
 - retry manual;
 - interrupção parcial;
 - reinício do processo.
+
+## Datas e campos personalizados
+
+- `timezone` preserva a zona IANA usada para interpretação futura da agenda;
+- `next_run_at`, `scheduled_for` e timestamps operacionais são persistidos como ISO-8601 em UTC;
+- `custom_fields` é validado como mapa de chaves `custom1` a `custom100` e serializado em JSON;
+- a CLI administrativa da persistência não inicializa o HESK e não cria tickets.
 
 ## Lote
 

@@ -90,7 +90,31 @@
 
 **Motivo:** no fluxo nativo, persistência e notificação são etapas separadas. A baseline exige que o solicitante não seja notificado.
 
+## ADR-016 — SQLite separado do banco do HESK
+
+**Decisão:** persistir recorrências e execuções em um arquivo SQLite próprio da aplicação.
+
+**Motivo:** a carga prevista é pequena, há um único processo Cron planejado, o suporte a PDO SQLite foi confirmado e o ambiente cPanel permite implantação e backup simples sem credenciais adicionais. O isolamento evita tabelas ou alterações no MariaDB gerenciado pelo HESK. O acesso fica encapsulado em repositórios para permitir migração futura caso múltiplos workers ou concorrência elevada justifiquem outro banco.
+
+## ADR-017 — Migrations versionadas e verificadas por checksum
+
+**Decisão:** aplicar arquivos SQL ordenados e registrar versão, checksum e data em `schema_migrations`.
+
+**Motivo:** o deploy precisa ser determinístico e seguro para reexecução. Uma migration já aplicada não pode ser alterada silenciosamente.
+
+## ADR-018 — Datas persistidas em UTC com timezone IANA na recorrência
+
+**Decisão:** normalizar instantes em ISO-8601 UTC e guardar separadamente a zona IANA configurada.
+
+**Motivo:** UTC evita ambiguidade na comparação de vencimentos, enquanto a zona original será necessária para cálculos civis futuros, inclusive mudanças de horário legal.
+
+## ADR-019 — Unicidade estrutural não conclui a idempotência operacional
+
+**Decisão:** criar desde já a restrição única `(recurrence_id, scheduled_for)`, sem declarar concluída a SAFE-001.
+
+**Motivo:** a restrição bloqueia duplicidade de registros, mas reserva atômica, retomada após falha parcial e política de retry dependem do scheduler e serão implementadas em tarefa própria.
+
 ## Pontos ainda pendentes
 
 - modelo real completo das manutenções preventivas;
-- decisão de persistência da aplicação.
+- política operacional de reserva, retry e retomada da SAFE-001.

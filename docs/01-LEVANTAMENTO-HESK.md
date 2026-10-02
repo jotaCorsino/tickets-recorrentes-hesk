@@ -4,11 +4,23 @@
 
 - HESK: 3.7.12
 - PHP: 8.2.33
+- Extensões requeridas para a persistência: `PDO`, `pdo_sqlite` e `sqlite3`
 - Banco: MariaDB 10.11.19
+- Banco da aplicação: SQLite próprio, separado do MariaDB do HESK
 - URL administrativa: `https://suporte.technolife.net.br/admin/admin_main.php`
 - Diretório da instalação: `/home/tech2612/suporte.technolife.net.br/`
 - Prefixo das tabelas: `hesktx_`
 - Cron disponível via cPanel
+
+## Persistência da aplicação
+
+A CFG-001 definiu o arquivo de produção planejado em:
+
+```text
+/home/tech2612/hesk-recorrencias/storage/app.sqlite
+```
+
+O caminho é configurável por `--db-path` ou pela variável `APP_DB_PATH`. O SQLite guarda somente recorrências e seu histórico de execuções; o HESK continua usando seu próprio MariaDB. O arquivo de banco e seus auxiliares WAL não devem ser versionados.
 
 ## Categorias identificadas
 
