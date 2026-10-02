@@ -95,7 +95,22 @@ Mapeamento observado em `hesktx_users`:
 
 Os IDs acima são IDs de **usuários da equipe** e servem para campos como `owner`, `openedby` e `assignedby`. Eles não substituem o `customer_id` do solicitante.
 
-Os técnicos 3 e 4 possuem categorias diretas registradas como `1,2,3` no campo `categories`. Como o HESK também pode conceder acesso a categorias por grupos de permissão, ainda é necessário validar se esses usuários possuem acesso à categoria `5 - WORKSTATION` por esse mecanismo antes de usá-los na POC.
+### Grupos de permissão e categorias
+
+Em `hesktx_permission_group_members`:
+
+| user_id | group_id |
+|---:|---:|
+| 3 | 2 |
+| 4 | 2 |
+
+O grupo 2 possui acesso às categorias:
+
+`1, 2, 3, 4, 5, 6, 7, 8, 9`
+
+Portanto, **João Gabriel Silveira (3)** e **João Paulo Corsino (4)** possuem acesso à categoria `5 - WORKSTATION` por grupo de permissão e podem ser considerados responsáveis válidos para a POC.
+
+O grupo 1 possui acesso às categorias `1, 2, 3, 4, 5`, mas nenhum vínculo de usuário com esse grupo foi observado no levantamento enviado.
 
 ## Responsável
 
@@ -106,6 +121,8 @@ A tela administrativa permite:
 - atribuição explícita a um técnico com acesso à categoria.
 
 A automação deverá permitir configurar o técnico responsável e validar o acesso dele à categoria selecionada.
+
+Para a POC de WORKSTATION, os usuários 3 e 4 estão validados quanto ao acesso à categoria.
 
 ## Notificações
 
