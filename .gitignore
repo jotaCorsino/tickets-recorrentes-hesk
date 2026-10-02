@@ -1,0 +1,5 @@
+storage/*.sqlite
+storage/*.sqlite3
+storage/*.db
+storage/*-wal
+storage/*-shm
