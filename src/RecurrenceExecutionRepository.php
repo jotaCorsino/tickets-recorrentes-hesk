@@ -97,6 +97,32 @@ final class RecurrenceExecutionRepository
     }
 
     /**
+     * @return array<string, mixed>|null
+     */
+    public function findByRecurrenceAndScheduledFor(
+        int $recurrenceId,
+        string $scheduledFor,
+    ): ?array {
+        if ($recurrenceId < 1) {
+            return null;
+        }
+
+        $scheduledFor = RecurrenceValidator::normalizeUtc($scheduledFor, 'scheduledFor');
+        $statement = $this->connection->prepare(
+            'SELECT * FROM recurrence_executions
+             WHERE recurrence_id = :recurrence_id AND scheduled_for = :scheduled_for
+             LIMIT 1'
+        );
+        $statement->execute([
+            'recurrence_id' => $recurrenceId,
+            'scheduled_for' => $scheduledFor,
+        ]);
+        $row = $statement->fetch();
+
+        return is_array($row) ? $this->hydrate($row) : null;
+    }
+
+    /**
      * @param array<string, mixed> $data
      * @return array<string, int|string|null>
      */

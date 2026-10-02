@@ -6,14 +6,15 @@ declare(strict_types=1);
 use TicketsRecorrentesHesk\Database;
 use TicketsRecorrentesHesk\MigrationRunner;
 use TicketsRecorrentesHesk\RecurrenceCliOptions;
+use TicketsRecorrentesHesk\RecurrenceExecutionRepository;
 use TicketsRecorrentesHesk\RecurrenceRepository;
-use TicketsRecorrentesHesk\RecurrenceValidator;
 
 require dirname(__DIR__) . '/src/RecurrenceCliOptions.php';
 require dirname(__DIR__) . '/src/Database.php';
 require dirname(__DIR__) . '/src/MigrationRunner.php';
 require dirname(__DIR__) . '/src/RecurrenceValidator.php';
 require dirname(__DIR__) . '/src/RecurrenceRepository.php';
+require dirname(__DIR__) . '/src/RecurrenceExecutionRepository.php';
 
 try {
     $options = RecurrenceCliOptions::parse($argv, getenv('APP_DB_PATH'));
@@ -59,6 +60,12 @@ try {
 
         case 'show':
             echo encodeJson(requireRecurrence($repository, $options->id)) . "\n";
+            break;
+
+        case 'executions':
+            requireRecurrence($repository, $options->id);
+            $executions = new RecurrenceExecutionRepository($connection);
+            echo encodeJson($executions->findByRecurrence((int) $options->id)) . "\n";
             break;
 
         case 'update':

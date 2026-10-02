@@ -9,7 +9,7 @@
 | BASE-001 | Baseline manual | Criar ticket de referência para comparação | CONCLUÍDO | Ticket 42 criado e validado visualmente |
 | POC-001 | Ticket único | Criar um ticket real de teste via CLI | CONCLUÍDO | Ticket correto no HESK, sem notificação indevida |
 | CFG-001 | Persistência | Modelar recorrências e execuções | CONCLUÍDO | Estrutura persistente versionada |
-| SCH-001 | Scheduler | Detectar recorrências vencidas | PENDENTE | Execução por Cron reprodutível |
+| SCH-001 | Scheduler | Detectar recorrências vencidas | CONCLUÍDO | Execução por Cron reprodutível |
 | SAFE-001 | Idempotência | Evitar duplicações | PENDENTE | Retry não duplica lote |
 | BATCH-001 | Lotes | Gerar múltiplos tickets independentes | PENDENTE | N tickets rastreados individualmente |
 | UI-001 | Painel | Editar recorrências sem alterar código | PENDENTE | CRUD funcional e simples |
@@ -62,8 +62,23 @@ Resultados confirmados:
 - diretório `storage` com permissão `750` e `app.sqlite` com permissão `660`;
 - nenhum ticket criado no HESK.
 
-## Próxima etapa
+## SCH-001 homologada
 
-### SCH-001 — Scheduler
+Em 02/10/2026, o scheduler foi homologado no servidor real usando exclusivamente:
 
-Objetivo: detectar recorrências vencidas e preparar sua execução pelo Cron. A SCH-001 deverá ser iniciada em tarefa própria; este registro de homologação não implementa scheduler nem Cron.
+```text
+/home/tech2612/hesk-recorrencias/storage/scheduler-homolog.sqlite
+```
+
+Resultados confirmados:
+
+- migration e criação da recorrência ID `1` executadas normalmente;
+- `check` encontrou uma recorrência vencida e calculou `2026-09-30T12:00:00Z` sem persistir alterações;
+- primeiro run criou a execution `1` para `2026-08-31T12:00:00Z` e avançou uma competência;
+- segundo run criou a execution `2` para `2026-09-30T12:00:00Z` e avançou para `2026-10-30T12:00:00Z`;
+- as duas executions ficaram `pending`, sem início, término ou erro;
+- check final encontrou zero recorrências vencidas;
+- recorrência deixada desabilitada e banco isolado, WAL e SHM removidos;
+- `app.sqlite` real permaneceu intacto e nenhum ticket foi criado no HESK.
+
+SAFE-001 e BATCH-001 continuam `PENDENTE`. Nenhuma delas foi iniciada por este encerramento.

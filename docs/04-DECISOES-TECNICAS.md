@@ -114,6 +114,30 @@
 
 **Motivo:** a restrição bloqueia duplicidade de registros, mas reserva atômica, retomada após falha parcial e política de retry dependem do scheduler e serão implementadas em tarefa própria.
 
+## ADR-020 — Cálculo civil na timezone da recorrência
+
+**Decisão:** converter o instante UTC para a timezone IANA configurada, adicionar o intervalo no calendário civil e converter o resultado novamente para UTC.
+
+**Motivo:** o horário local deve permanecer estável mesmo quando o offset UTC mudar. Meses e anos usam clamp para o último dia válido, evitando saltos como 31 de janeiro para março.
+
+## ADR-021 — Uma competência por recorrência em cada run
+
+**Decisão:** cada execução do scheduler processa no máximo o `next_run_at` atual de cada recorrência selecionada.
+
+**Motivo:** atrasos não podem gerar loops ilimitados ou rajadas inesperadas. Se a próxima data continuar vencida, outro run avançará mais uma competência.
+
+## ADR-022 — Execution e avanço da recorrência na mesma transação
+
+**Decisão:** inserir `recurrence_execution` e atualizar `next_run_at` atomicamente, com comparação do valor esperado.
+
+**Motivo:** uma falha não pode deixar uma execution sem avanço nem uma recorrência avançada sem seu registro. Divergência ou erro provoca rollback integral.
+
+## ADR-023 — Dry run e limite global de segurança
+
+**Decisão:** oferecer `check` somente leitura e limitar cada chamada a 100 recorrências por padrão, aceitando de 1 a 1000.
+
+**Motivo:** a operação precisa ser inspecionável antes da escrita e ter custo máximo previsível. O limite conta recorrências, não a quantidade futura de tickets.
+
 ## Pontos ainda pendentes
 
 - modelo real completo das manutenções preventivas;

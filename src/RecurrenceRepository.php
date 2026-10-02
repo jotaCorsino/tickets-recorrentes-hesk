@@ -86,6 +86,65 @@ final class RecurrenceRepository
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    public function findDue(string $nowUtc, int $limit = 100): array
+    {
+        $nowUtc = RecurrenceValidator::normalizeUtc($nowUtc, 'nowUtc');
+
+        if ($limit < 1 || $limit > 1000) {
+            throw new \InvalidArgumentException('limit deve estar entre 1 e 1000.');
+        }
+
+        $statement = $this->connection->prepare(
+            'SELECT * FROM recurrences
+             WHERE enabled = 1 AND next_run_at <= :now_utc
+             ORDER BY next_run_at, id
+             LIMIT :limit'
+        );
+        $statement->bindValue('now_utc', $nowUtc);
+        $statement->bindValue('limit', $limit, PDO::PARAM_INT);
+        $statement->execute();
+        $recurrences = [];
+
+        foreach ($statement->fetchAll() as $row) {
+            $recurrences[] = $this->hydrate($row);
+        }
+
+        return $recurrences;
+    }
+
+    public function advanceNextRunAt(
+        int $id,
+        string $expectedScheduledFor,
+        string $nextRunAt,
+    ): bool {
+        if ($id < 1) {
+            return false;
+        }
+
+        $expectedScheduledFor = RecurrenceValidator::normalizeUtc(
+            $expectedScheduledFor,
+            'expectedScheduledFor'
+        );
+        $nextRunAt = RecurrenceValidator::normalizeUtc($nextRunAt, 'nextRunAt');
+
+        $statement = $this->connection->prepare(
+            'UPDATE recurrences
+             SET next_run_at = :next_run_at, updated_at = :updated_at
+             WHERE id = :id AND enabled = 1 AND next_run_at = :expected_scheduled_for'
+        );
+        $statement->execute([
+            'next_run_at' => $nextRunAt,
+            'updated_at' => self::utcNow(),
+            'id' => $id,
+            'expected_scheduled_for' => $expectedScheduledFor,
+        ]);
+
+        return $statement->rowCount() === 1;
+    }
+
+    /**
      * Atualiza uma recorrência com dados completos ou parciais.
      *
      * @param array<string, mixed> $changes

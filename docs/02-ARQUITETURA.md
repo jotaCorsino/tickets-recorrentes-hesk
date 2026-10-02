@@ -115,6 +115,38 @@ src/
 
 O SQLite da aplicação é independente do MariaDB do HESK. SQL de domínio fica restrito às migrations e aos repositórios. Scheduler, cálculo de próximas datas, geração em lote e interface permanecem fora da CFG-001.
 
+Na SCH-001 foram acrescentados:
+
+```text
+bin/
+  scheduler.php
+
+src/
+  SchedulerCliOptions.php
+  RecurrenceScheduleCalculator.php
+  Scheduler.php
+```
+
+`RecurrenceRepository` passou a selecionar recorrências vencidas e avançar `next_run_at` de forma controlada. `RecurrenceExecutionRepository` passou a localizar uma execution por recorrência e competência. O script CLI apenas compõe esses componentes; não contém SQL, não carrega `HeskBootstrap` e não chama `hesk_newTicket()`.
+
+## Fluxo do scheduler
+
+```text
+instante UTC injetado
+    ↓
+recorrências enabled e vencidas, ordenadas por next_run_at e id
+    ↓
+cálculo da próxima data na timezone civil da recorrência
+    ↓
+transação SQLite por recorrência
+    ├─ cria recurrence_execution pending
+    └─ avança next_run_at por comparação com o valor esperado
+    ↓
+commit ou rollback integral
+```
+
+O modo `check` encerra antes da transação e apenas relata o que seria feito. Cada chamada processa no máximo uma competência por recorrência, mesmo quando há vários meses de atraso.
+
 ## Modelo conceitual da recorrência
 
 Cada recorrência deverá conter, no mínimo:
@@ -165,6 +197,8 @@ recurrence_id + scheduled_for
 Antes de gerar qualquer lote, o motor verifica se aquela execução já foi processada.
 
 A CFG-001 já fornece a garantia estrutural `UNIQUE (recurrence_id, scheduled_for)`. Ela impede duas linhas para a mesma ocorrência programada, mas ainda não implementa a política completa de reserva, retry e retomada. Essa política pertence à SAFE-001.
+
+A SCH-001 respeita essa restrição e informa uma execution preexistente como ignorada, sem avançar silenciosamente a recorrência. Locking entre múltiplos workers, retry e recuperação após falha parcial continuam pertencendo à SAFE-001.
 
 A proteção deve sobreviver a:
 
