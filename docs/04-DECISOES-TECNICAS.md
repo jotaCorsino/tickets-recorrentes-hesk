@@ -56,9 +56,19 @@
 
 **Motivo:** o solicitante do ticket usa `customer_id`, proveniente de `hesktx_customers`, e não um ID de `hesktx_users`.
 
+## ADR-011 — Solicitante interno dedicado é preferível
+
+**Situação observada:** não existe hoje customer com e-mail `@technolife.net.br`. Há um registro `9 - TECHNOLIFE`.
+
+**Direção preferencial:** criar um customer dedicado à automação, em vez de acoplar definitivamente o sistema a um registro genérico.
+
+**Motivo:** melhora rastreabilidade, auditoria e permite alterar política de e-mail/notificação sem afetar outros usos do registro TECHNOLIFE.
+
+A POC pode reutilizar o customer 9 somente se isso for deliberadamente aprovado e validado como selecionável no formulário administrativo.
+
 ## Pontos ainda pendentes
 
-- ID da conta interna solicitante em `hesktx_customers`;
+- definir se o solicitante será `customer_id=9 (TECHNOLIFE)` ou uma nova conta dedicada;
 - confirmar acesso do técnico escolhido à categoria `5 - WORKSTATION`, inclusive por grupos de permissão;
 - modelo real completo das manutenções preventivas;
 - decisão de persistência da aplicação;
