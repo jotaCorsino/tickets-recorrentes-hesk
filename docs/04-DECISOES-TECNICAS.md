@@ -56,27 +56,42 @@
 
 **Motivo:** o solicitante do ticket usa `customer_id`, proveniente de `hesktx_customers`, e não um ID de `hesktx_users`.
 
-## ADR-011 — Solicitante interno dedicado é preferível
+## ADR-011 — Solicitante interno dedicado da POC
 
-**Situação observada:** não existe hoje customer com e-mail `@technolife.net.br`. Há um registro `9 - TECHNOLIFE`.
+**Decisão:** a POC usa o customer `21 - Automação Technolife` como solicitante.
 
-**Direção preferencial:** criar um customer dedicado à automação, em vez de acoplar definitivamente o sistema a um registro genérico.
+**Configuração validada:** `customer_id=21`, nome `Automação Technolife` e notificação ao solicitante desabilitada.
 
-**Motivo:** melhora rastreabilidade, auditoria e permite alterar política de e-mail/notificação sem afetar outros usos do registro TECHNOLIFE.
-
-A POC pode reutilizar o customer 9 somente se isso for deliberadamente aprovado e validado como selecionável no formulário administrativo.
+**Motivo:** melhora rastreabilidade e auditoria sem acoplar a automação ao registro genérico `9 - TECHNOLIFE`.
 
 ## ADR-012 — Técnicos 3 e 4 habilitados para WORKSTATION
 
 **Decisão:** João Gabriel Silveira (`user_id=3`) e João Paulo Corsino (`user_id=4`) são responsáveis válidos para a categoria `5 - WORKSTATION`.
 
-**Evidência operacional:** ambos pertencem ao grupo de permissão 2, e esse grupo possui acesso às categorias 1 a 9.
+**Evidência operacional:** ambos pertencem ao grupo de permissão 2, e as categorias observadas para esse grupo foram `1, 2, 3, 4, 5, 7, 8, 9`.
 
 **Motivo:** o HESK considera acesso por grupo de permissão ao validar o responsável do ticket.
 
+## ADR-013 — Bootstrap CLI com contexto HTTPS
+
+**Decisão:** preparar `HTTPS`, `HTTP_X_FORWARDED_PROTO`, `SERVER_NAME` e `REQUEST_URI` antes de carregar `common.inc.php`, além de definir `NO_HTTP_HEADER` para o contexto CLI.
+
+**Motivo:** a instalação usa `force_ssl`; sem contexto adequado, o bootstrap tenta redirecionar e encerra o processo. A solução mantém o core do HESK intacto.
+
+## ADR-014 — Prioridade resolvida pelo HESK
+
+**Decisão:** localizar a prioridade `Baixa` pelo nome entre as prioridades carregadas do próprio HESK e validar seu ID antes de criar o ticket.
+
+**Motivo:** o ID não deve ser presumido silenciosamente. Se o nome não for encontrado de forma inequívoca, `--check` lista os valores disponíveis e `--execute` é bloqueado.
+
+## ADR-015 — Persistência sem notificação ao solicitante
+
+**Decisão:** usar somente `hesk_newTicket()` para persistir a POC e não invocar `hesk_notifyCustomer()` nem criar mecanismo próprio de e-mail.
+
+**Motivo:** no fluxo nativo, persistência e notificação são etapas separadas. A baseline exige que o solicitante não seja notificado.
+
 ## Pontos ainda pendentes
 
-- definir se o solicitante será `customer_id=9 (TECHNOLIFE)` ou uma nova conta dedicada;
 - modelo real completo das manutenções preventivas;
 - decisão de persistência da aplicação;
-- estratégia final de bootstrap do HESK para CLI.
+- homologar o bootstrap e a criação da POC no servidor real.

@@ -28,7 +28,7 @@ execução é registrada para evitar duplicidade
 
 Já foram identificados os campos, categorias, responsáveis e permissões necessários. Também foi criado o solicitante interno **Automação Technolife** e validado manualmente um ticket de manutenção preventiva que servirá como referência para a implementação.
 
-**Situação atual:** levantamento e arquitetura definidos. O próximo passo é desenvolver a prova de conceito em PHP para criar automaticamente, via CLI, um ticket equivalente ao modelo já validado manualmente.
+**Situação atual:** a prova de conceito PHP CLI foi implementada e aguarda homologação no HESK real. O modo `--check` valida o ambiente sem criar ticket; somente `--execute` cria o ticket equivalente ao modelo manual.
 
 **Em resumo:** o painel será responsável por administrar **o que, quando e quantos chamados devem ser criados**; um único Cron fará a verificação periódica; e o PHP realizará a criação dos tickets através do próprio HESK, com controle de recorrência e prevenção de duplicidades.
 
@@ -117,7 +117,7 @@ Valores já identificados:
 | KB-001 | Fundação documental | Criar base de conhecimento e regras do projeto | CONCLUÍDO | README, AGENTS e documentação inicial publicados |
 | ARC-001 | Arquitetura HESK | Mapear fluxo nativo de criação de ticket e pontos de integração | AGUARDANDO_HOMOLOGACAO | Fluxo `new_ticket → admin_submit_ticket → hesk_newTicket` documentado |
 | BASE-001 | Baseline manual | Criar o ticket de referência que a automação deverá reproduzir | CONCLUÍDO | Ticket 42 criado e validado visualmente |
-| POC-001 | Prova de conceito | Criar 1 ticket WORKSTATION de teste pelo mecanismo correto do HESK | PENDENTE | Ticket criado via CLI com campos, responsável e notificações corretos |
+| POC-001 | Prova de conceito | Criar 1 ticket WORKSTATION de teste pelo mecanismo correto do HESK | AGUARDANDO_HOMOLOGACAO | Ticket criado via CLI com campos, responsável e notificações corretos |
 | CFG-001 | Modelo de recorrência | Definir estrutura configurável de empresa, frequência, quantidade e ticket | PENDENTE | Configuração persistente validada |
 | SCH-001 | Scheduler | Implementar execução por Cron e cálculo de recorrências vencidas | PENDENTE | Execução automática controlada pelo cPanel |
 | BATCH-001 | Geração em lote | Criar N tickets independentes em uma execução | PENDENTE | Lote criado com rastreabilidade individual |
@@ -156,6 +156,7 @@ Cada tarefa deverá ser executada isoladamente.
 - [Roadmap](docs/03-ROADMAP.md)
 - [Decisões técnicas](docs/04-DECISOES-TECNICAS.md)
 - [Baseline manual da POC](docs/05-POC-MANUAL.md)
+- [Implementação e homologação da POC CLI](docs/06-POC-CLI.md)
 
 ## Princípio do projeto
 

@@ -7,7 +7,7 @@
 | KB-001 | Fundação documental | Consolidar ambiente, regras e arquitetura inicial | CONCLUÍDO | Documentação inicial publicada |
 | ARC-001 | Arquitetura HESK | Confirmar fluxo nativo e estratégia de integração | AGUARDANDO_HOMOLOGACAO | Fluxo e restrições documentados |
 | BASE-001 | Baseline manual | Criar ticket de referência para comparação | CONCLUÍDO | Ticket 42 criado e validado visualmente |
-| POC-001 | Ticket único | Criar um ticket real de teste via CLI | PENDENTE | Ticket correto no HESK, sem notificação indevida |
+| POC-001 | Ticket único | Criar um ticket real de teste via CLI | AGUARDANDO_HOMOLOGACAO | Ticket correto no HESK, sem notificação indevida |
 | CFG-001 | Persistência | Modelar recorrências e execuções | PENDENTE | Estrutura persistente versionada |
 | SCH-001 | Scheduler | Detectar recorrências vencidas | PENDENTE | Execução por Cron reprodutível |
 | SAFE-001 | Idempotência | Evitar duplicações | PENDENTE | Retry não duplica lote |
@@ -36,13 +36,13 @@ Ticket manual de referência:
 
 Ver `docs/05-POC-MANUAL.md`.
 
-## Próxima tarefa
+## Etapa atual
 
-### POC-001 — Ticket único
+### POC-001 — Homologação do ticket único
 
-Objetivo: validar a integração mínima com HESK 3.7.12.
+Objetivo: homologar no servidor a integração mínima já implementada para HESK 3.7.12.
 
-Cenário alvo: reproduzir via CLI a baseline manual documentada em `docs/05-POC-MANUAL.md`.
+Cenário alvo: executar primeiro `--check` e, somente após validar toda a saída, executar `--execute` para reproduzir a baseline manual documentada em `docs/05-POC-MANUAL.md`.
 
 Não implementar nesta tarefa:
 
@@ -62,3 +62,7 @@ Critério de saída:
 5. nenhuma notificação indevida ao solicitante;
 6. erro claro se parâmetros forem inválidos;
 7. nenhum arquivo do core do HESK alterado.
+
+Instruções de instalação e homologação: `docs/06-POC-CLI.md`.
+
+Não iniciar `CFG-001` antes da homologação da POC-001.
