@@ -1,6 +1,6 @@
 # Tickets Recorrentes HESK
 
-## Resumo executivo
+## Resumo
 
 Será desenvolvido um **sistema externo em PHP, com interface HTML administrativa**, integrado ao HESK 3.7.12 para criar chamados recorrentes automaticamente.
 
