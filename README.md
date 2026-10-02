@@ -30,7 +30,11 @@ Já foram identificados os campos, categorias, responsáveis e permissões neces
 
 **Base homologada:** a prova de conceito PHP CLI e a persistência própria em SQLite foram homologadas com sucesso no servidor real. A CFG-001 confirmou migrations idempotentes, foreign keys, WAL, normalização UTC e administração da recorrência sem criar tickets no HESK.
 
-**Situação atual:** a SCH-001 também foi homologada com sucesso no servidor real. O dry run não persistiu alterações; dois runs processaram exatamente uma competência cada, criaram duas executions pendentes e avançaram `next_run_at` até `2026-10-30T12:00:00Z`. O banco isolado foi removido, o `app.sqlite` permaneceu intacto e nenhum ticket foi criado no HESK. Nenhuma próxima implementação foi iniciada.
+**Base homologada:** a SCH-001 também foi homologada com sucesso no servidor real. O dry run não persistiu alterações; dois runs processaram exatamente uma competência cada, criaram duas executions pendentes e avançaram `next_run_at` até `2026-10-30T12:00:00Z`. O banco isolado foi removido, o `app.sqlite` permaneceu intacto e nenhum ticket foi criado no HESK.
+
+**Base homologada:** a SAFE-001 foi homologada com sucesso no servidor real em banco isolado. O fluxo confirmou claim exclusivo, bloqueio de segundo worker durante lease ativo, heartbeat, falha controlada, retry da mesma execution, nova tentativa e estado terminal `succeeded`. O `app.sqlite` permaneceu intacto e nenhum ticket foi criado no HESK. O stale takeover continua validado pelos testes automatizados, não por reprodução manual no cPanel.
+
+**Situação da etapa atual:** SAFE-001 está concluída. BATCH-001 permanece pendente e nenhuma próxima implementação foi iniciada.
 
 **Em resumo:** o painel será responsável por administrar **o que, quando e quantos chamados devem ser criados**; um único Cron fará a verificação periódica; e o PHP realizará a criação dos tickets através do próprio HESK, com controle de recorrência e prevenção de duplicidades.
 
@@ -125,7 +129,7 @@ Valores já identificados:
 | CFG-001 | Modelo de recorrência | Definir estrutura configurável de empresa, frequência, quantidade e ticket | CONCLUÍDO | Configuração persistente validada |
 | SCH-001 | Scheduler | Implementar execução por Cron e cálculo de recorrências vencidas | CONCLUÍDO | Execução automática controlada pelo cPanel |
 | BATCH-001 | Geração em lote | Criar N tickets independentes em uma execução | PENDENTE | Lote criado com rastreabilidade individual |
-| SAFE-001 | Idempotência | Impedir duplicação por reexecução do Cron | PENDENTE | Mesma competência não gera tickets duplicados |
+| SAFE-001 | Idempotência | Proteger posse e transições de cada execution | CONCLUÍDO | Uma execution não é processada simultaneamente por dois workers; stale lease e retry preservam a mesma identidade |
 | UI-001 | Administração | Criar interface simples para editar recorrências | PENDENTE | Frequência, volume e parâmetros alteráveis sem editar PHP |
 | DEP-001 | Implantação | Preparar instalação segura no cPanel | PENDENTE | Deploy reproduzível e Cron configurado |
 | OPS-001 | Operação | Criar manual técnico de instalação, uso e manutenção | PENDENTE | Documentação operacional concluída |
@@ -163,6 +167,7 @@ Cada tarefa deverá ser executada isoladamente.
 - [Implementação e homologação da POC CLI](docs/06-POC-CLI.md)
 - [Persistência e modelo de recorrência](docs/07-PERSISTENCIA.md)
 - [Scheduler de recorrências](docs/08-SCHEDULER.md)
+- [Segurança e idempotência de execution](docs/09-EXECUTION-SAFETY.md)
 
 ## Princípio do projeto
 

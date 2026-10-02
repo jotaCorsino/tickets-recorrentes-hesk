@@ -138,7 +138,50 @@
 
 **Motivo:** a operação precisa ser inspecionável antes da escrita e ter custo máximo previsível. O limite conta recorrências, não a quantidade futura de tickets.
 
+## ADR-024 — Claim por lease temporário
+
+**Decisão:** um worker assume uma `recurrence_execution` por tempo limitado, movendo-a de `pending` para `running` e registrando owner, expiração e tentativa.
+
+**Motivo:** posse permanente impediria recuperação após interrupção; ausência de reserva permitiria processamento simultâneo.
+
+## ADR-025 — Token aleatório como prova de posse
+
+**Decisão:** cada claim gera `bin2hex(random_bytes(32))`; heartbeat e finish exigem o token do lease ativo. Listagens e consultas genéricas não o expõem.
+
+**Motivo:** ID, PID e timestamp são previsíveis e não provam posse. Um novo claim invalida imediatamente o token anterior.
+
+## ADR-026 — BEGIN IMMEDIATE serializa claims no SQLite
+
+**Decisão:** selecionar e atualizar o candidato dentro de uma transação própria iniciada com `BEGIN IMMEDIATE`.
+
+**Motivo:** duas conexões não podem observar e assumir simultaneamente a mesma linha entre um `SELECT` e um `UPDATE`. O helper é isolado para não alterar as transações já usadas pelo scheduler.
+
+## ADR-027 — Lease expirado é recuperável
+
+**Decisão:** uma execution `running` com token, owner e `lease_expires_at <= agora` pode ser assumida por outro worker, recebendo novo token e incremento de `attempt_count`.
+
+**Motivo:** um worker interrompido não deve bloquear o trabalho indefinidamente. Uma linha `running` sem lease continua sendo estado legado inconsistente e exige intervenção explícita.
+
+## ADR-028 — Failed e partial exigem retry explícito
+
+**Decisão:** `failed` e `partial` não participam do claim automático. O comando de retry reutiliza a mesma execution, preserva identidade e `attempt_count`, limpa erro e timestamps da tentativa e retorna a linha a `pending`.
+
+**Motivo:** uma falha precisa ser reconhecida antes de nova tentativa, evitando loops automáticos e perda do histórico acumulado.
+
+## ADR-029 — Succeeded é terminal
+
+**Decisão:** uma execution `succeeded` não aceita claim nem retry e não volta a `pending`.
+
+**Motivo:** reabrir silenciosamente um trabalho concluído ampliaria o risco de duplicação.
+
+## ADR-030 — Exactly-once de ticket depende da BATCH-001
+
+**Decisão:** SAFE-001 declara idempotência somente no nível da `recurrence_execution`, não no nível de tickets HESK.
+
+**Motivo:** ainda não existem identidade persistente por item, tracking ID reservado antes da criação ou reconciliação após crash. BATCH-001 deverá criar esse contrato antes de habilitar o processamento real.
+
 ## Pontos ainda pendentes
 
 - modelo real completo das manutenções preventivas;
-- política operacional de reserva, retry e retomada da SAFE-001.
+- identidade persistente e reconciliação de cada item de lote na BATCH-001;
+- procedimento administrativo para resolver executions legadas `running` sem lease.

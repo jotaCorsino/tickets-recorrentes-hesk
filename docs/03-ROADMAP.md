@@ -10,7 +10,7 @@
 | POC-001 | Ticket único | Criar um ticket real de teste via CLI | CONCLUÍDO | Ticket correto no HESK, sem notificação indevida |
 | CFG-001 | Persistência | Modelar recorrências e execuções | CONCLUÍDO | Estrutura persistente versionada |
 | SCH-001 | Scheduler | Detectar recorrências vencidas | CONCLUÍDO | Execução por Cron reprodutível |
-| SAFE-001 | Idempotência | Evitar duplicações | PENDENTE | Retry não duplica lote |
+| SAFE-001 | Idempotência de execution | Proteger claim, lease e retry da mesma execution | CONCLUÍDO | Uma execution não é processada simultaneamente por dois workers; stale lease e retry preservam a mesma identidade |
 | BATCH-001 | Lotes | Gerar múltiplos tickets independentes | PENDENTE | N tickets rastreados individualmente |
 | UI-001 | Painel | Editar recorrências sem alterar código | PENDENTE | CRUD funcional e simples |
 | DEP-001 | cPanel | Implantar no ambiente real | PENDENTE | Deploy e Cron documentados |
@@ -81,4 +81,20 @@ Resultados confirmados:
 - recorrência deixada desabilitada e banco isolado, WAL e SHM removidos;
 - `app.sqlite` real permaneceu intacto e nenhum ticket foi criado no HESK.
 
-SAFE-001 e BATCH-001 continuam `PENDENTE`. Nenhuma delas foi iniciada por este encerramento.
+## SAFE-001 homologada
+
+Em 02/10/2026, a segurança de execution foi homologada no servidor real usando exclusivamente:
+
+```text
+/home/tech2612/hesk-recorrencias/storage/safe-homolog.sqlite
+```
+
+As migrations `001_initial_schema` e `002_execution_leases` foram aplicadas com `foreign_keys=1` e `journal_mode=wal`; a segunda execução não encontrou migrations pendentes. O scheduler criou a execution `1` como `pending`, para `scheduled_for=2026-10-01T12:00:00Z`, e avançou a recorrência para `2027-10-01T12:00:00Z`.
+
+O worker A obteve o primeiro claim e elevou `attempt_count` de `0` para `1`. Durante o lease ativo, o worker B foi recusado com `active_lease`. O heartbeat renovou a expiração sem alterar o início ou a identificação da tentativa, e `show` não expôs o token.
+
+A primeira tentativa terminou em `failed` com a mensagem controlada. O retry explícito reutilizou a execution `1`, preservou identidade, competência, contagens e `last_attempt_at`, manteve `attempt_count=1` e limpou lease, erro, início e fim. O worker B realizou o segundo claim, elevou `attempt_count` para `2` e finalizou como `succeeded`; lease e erro ficaram nulos. O retry posterior foi bloqueado como `terminal_succeeded`.
+
+A recorrência foi desabilitada e o banco isolado, WAL e SHM foram removidos. O `app.sqlite` real permaneceu intacto e nenhum ticket foi criado no HESK. O stale takeover por expiração não foi reproduzido manualmente no cPanel; ele permanece coberto por `tests/safety.php`, incluindo novo token, incremento de tentativa e invalidação do token antigo.
+
+SAFE-001 está `CONCLUÍDO`. A garantia continua restrita à `recurrence_execution`; BATCH-001 permanece `PENDENTE` e não foi iniciada.

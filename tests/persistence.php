@@ -84,14 +84,18 @@ try {
     $assertSame('wal', $diagnostics['journal_mode'], 'O banco deve usar journal_mode WAL');
 
     $migrations = new MigrationRunner($connection, dirname(__DIR__) . '/database/migrations');
-    $assertSame(['001_initial_schema'], $migrations->migrate(), 'A primeira execução deve aplicar a migration inicial');
+    $assertSame(
+        ['001_initial_schema', '002_execution_leases'],
+        $migrations->migrate(),
+        'A primeira execução deve aplicar as migrations disponíveis'
+    );
     $assertSame([], $migrations->migrate(), 'A segunda execução das migrations deve ser idempotente');
     $migrations->assertUpToDate();
 
     $assertSame(
-        1,
+        2,
         (int) $connection->query('SELECT COUNT(*) FROM schema_migrations')->fetchColumn(),
-        'A migration deve ser registrada uma única vez'
+        'As migrations devem ser registradas uma única vez cada'
     );
 
     $tables = $connection->query(
@@ -199,6 +203,11 @@ try {
 
     $assertSame(1, $execution['id'], 'A primeira execução deve receber ID 1');
     $assertSame('2027-07-15T12:00:00Z', $execution['scheduled_for'], 'scheduled_for deve ser persistido em UTC');
+    $assertSame(0, $execution['attempt_count'], 'Uma execution nova deve começar sem tentativas');
+    $assertSame(null, $execution['lease_owner'], 'Uma execution nova deve começar sem owner de lease');
+    $assertSame(null, $execution['lease_expires_at'], 'Uma execution nova deve começar sem expiração de lease');
+    $assertSame(null, $execution['last_attempt_at'], 'Uma execution nova deve começar sem tentativa registrada');
+    $assertTrue(!array_key_exists('lease_token', $execution), 'Consultas genéricas não devem expor lease_token');
     $assertSame($execution, $executions->findById(1), 'A execução deve ser consultável por ID');
     $assertSame([$execution], $executions->findByRecurrence(1), 'A execução deve ser consultável por recorrência');
 
