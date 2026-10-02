@@ -1,5 +1,39 @@
 # Tickets Recorrentes HESK
 
+## Resumo executivo
+
+Será desenvolvido um **sistema externo em PHP, com interface HTML administrativa**, integrado ao HESK 3.7.12 para criar chamados recorrentes automaticamente.
+
+Pelo painel será possível configurar empresa, categoria e campos personalizados, técnico responsável, prioridade, quantidade de tickets, frequência, assunto e mensagem. Essas configurações ficarão registradas no próprio sistema de recorrências.
+
+O painel **não criará um Cron para cada automação**. Haverá **um único Cron Job no cPanel**, executado periodicamente, responsável por chamar o PHP do sistema. A cada execução, o sistema verificará quais recorrências chegaram à data programada e quais chamados precisam ser gerados.
+
+Quando uma recorrência precisar ser executada, o PHP montará os dados dos chamados e utilizará o **próprio mecanismo e funções internas do HESK** para criá-los. Não será necessário abrir e preencher automaticamente o formulário do HESK nem inserir tickets diretamente no banco.
+
+```text
+Painel HTML
+    ↓
+salva as configurações das recorrências
+    ↓
+Cron único do cPanel executa periodicamente
+    ↓
+PHP identifica as recorrências que venceram
+    ↓
+PHP utiliza as funções internas do HESK
+    ↓
+tickets são criados normalmente no HESK
+    ↓
+execução é registrada para evitar duplicidade
+```
+
+Já foram identificados os campos, categorias, responsáveis e permissões necessários. Também foi criado o solicitante interno **Automação Technolife** e validado manualmente um ticket de manutenção preventiva que servirá como referência para a implementação.
+
+**Situação atual:** levantamento e arquitetura definidos. O próximo passo é desenvolver a prova de conceito em PHP para criar automaticamente, via CLI, um ticket equivalente ao modelo já validado manualmente.
+
+**Em resumo:** o painel será responsável por administrar **o que, quando e quantos chamados devem ser criados**; um único Cron fará a verificação periódica; e o PHP realizará a criação dos tickets através do próprio HESK, com controle de recorrência e prevenção de duplicidades.
+
+---
+
 Base de conhecimento, planejamento e acompanhamento do sistema de criação automática de chamados recorrentes no HESK OSS da Technolife.
 
 ## Objetivo
