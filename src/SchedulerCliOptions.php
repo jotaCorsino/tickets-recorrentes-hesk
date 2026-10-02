@@ -6,37 +6,25 @@ namespace TicketsRecorrentesHesk;
 
 use InvalidArgumentException;
 
-final class RecurrenceCliOptions
+final class SchedulerCliOptions
 {
-    private const COMMANDS = [
-        'migrate',
-        'create',
-        'list',
-        'show',
-        'enable',
-        'disable',
-        'update',
-        'executions',
-    ];
+    private const COMMANDS = ['check', 'run'];
 
     private function __construct(
         public readonly string $command,
         public readonly string $dbPath,
-        public readonly ?string $filePath,
-        public readonly ?int $id,
+        public readonly int $limit,
     ) {
     }
 
-    /**
-     * @param list<string> $arguments
-     */
+    /** @param list<string> $arguments */
     public static function parse(array $arguments, string|false|null $environmentPath = null): self
     {
         array_shift($arguments);
         $dbPath = self::cleanString($environmentPath) ?? dirname(__DIR__) . '/storage/app.sqlite';
 
         if ($arguments === [] || in_array($arguments[0], ['--help', '-h', 'help'], true)) {
-            return new self('help', $dbPath, null, null);
+            return new self('help', $dbPath, 100);
         }
 
         $command = array_shift($arguments);
@@ -51,7 +39,7 @@ final class RecurrenceCliOptions
             $argument = $arguments[$index];
 
             if (in_array($argument, ['--help', '-h'], true)) {
-                return new self('help', $dbPath, null, null);
+                return new self('help', $dbPath, 100);
             }
 
             if (!str_starts_with($argument, '--')) {
@@ -73,7 +61,7 @@ final class RecurrenceCliOptions
                 $value = $arguments[$index];
             }
 
-            if (!in_array($option, ['db-path', 'file', 'id'], true)) {
+            if (!in_array($option, ['db-path', 'limit'], true)) {
                 throw new InvalidArgumentException("Opção desconhecida: --{$option}");
             }
 
@@ -89,57 +77,35 @@ final class RecurrenceCliOptions
                 ?? throw new InvalidArgumentException('--db-path não pode ficar vazio.');
         }
 
-        $needsFile = in_array($command, ['create', 'update'], true);
-        $needsId = in_array($command, ['show', 'enable', 'disable', 'update', 'executions'], true);
+        $rawLimit = $options['limit'] ?? '100';
 
-        if (!$needsFile && isset($options['file'])) {
-            throw new InvalidArgumentException("O comando {$command} não aceita --file.");
+        if (!is_string($rawLimit) || !preg_match('/^[1-9][0-9]*$/D', $rawLimit)) {
+            throw new InvalidArgumentException('--limit deve ser um inteiro entre 1 e 1000.');
         }
 
-        if (!$needsId && isset($options['id'])) {
-            throw new InvalidArgumentException("O comando {$command} não aceita --id.");
+        $limit = (int) $rawLimit;
+
+        if ($limit < 1 || $limit > 1000) {
+            throw new InvalidArgumentException('--limit deve estar entre 1 e 1000.');
         }
 
-        $filePath = self::cleanString($options['file'] ?? null);
-
-        if ($needsFile && $filePath === null) {
-            throw new InvalidArgumentException("O comando {$command} exige --file.");
-        }
-
-        $id = null;
-
-        if ($needsId) {
-            $rawId = $options['id'] ?? null;
-
-            if (!is_string($rawId) || !preg_match('/^[1-9][0-9]*$/D', $rawId)) {
-                throw new InvalidArgumentException("O comando {$command} exige --id inteiro positivo.");
-            }
-
-            $id = (int) $rawId;
-        }
-
-        return new self($command, $dbPath, $filePath, $id);
+        return new self($command, $dbPath, $limit);
     }
 
     public static function usage(): string
     {
         return <<<'TEXT'
-CFG-001 - administração da persistência de recorrências
+SCH-001 - scheduler de recorrências
 
 Uso:
-  php bin/recurrence.php migrate [--db-path=/caminho/app.sqlite]
-  php bin/recurrence.php create  [--db-path=/caminho/app.sqlite] --file=/caminho/recurrence.json
-  php bin/recurrence.php list    [--db-path=/caminho/app.sqlite]
-  php bin/recurrence.php show    [--db-path=/caminho/app.sqlite] --id=1
-  php bin/recurrence.php update  [--db-path=/caminho/app.sqlite] --id=1 --file=/caminho/alteracoes.json
-  php bin/recurrence.php enable  [--db-path=/caminho/app.sqlite] --id=1
-  php bin/recurrence.php disable [--db-path=/caminho/app.sqlite] --id=1
-  php bin/recurrence.php executions [--db-path=/caminho/app.sqlite] --id=1
+  php bin/scheduler.php check [--db-path=/caminho/app.sqlite] [--limit=100]
+  php bin/scheduler.php run   [--db-path=/caminho/app.sqlite] [--limit=100]
 
 O caminho também pode ser definido por APP_DB_PATH.
-Sem configuração, o padrão é storage/app.sqlite dentro do projeto.
+O limite padrão é 100 e deve estar entre 1 e 1000 recorrências.
 
-Esta CLI administra somente o SQLite. Ela não carrega o HESK e não cria tickets.
+check não grava dados. run registra executions pending e avança next_run_at.
+Esta CLI não carrega o HESK e não cria tickets.
 TEXT;
     }
 

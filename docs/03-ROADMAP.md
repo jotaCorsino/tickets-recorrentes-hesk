@@ -9,7 +9,7 @@
 | BASE-001 | Baseline manual | Criar ticket de referência para comparação | CONCLUÍDO | Ticket 42 criado e validado visualmente |
 | POC-001 | Ticket único | Criar um ticket real de teste via CLI | CONCLUÍDO | Ticket correto no HESK, sem notificação indevida |
 | CFG-001 | Persistência | Modelar recorrências e execuções | CONCLUÍDO | Estrutura persistente versionada |
-| SCH-001 | Scheduler | Detectar recorrências vencidas | PENDENTE | Execução por Cron reprodutível |
+| SCH-001 | Scheduler | Detectar recorrências vencidas | AGUARDANDO_HOMOLOGACAO | Execução por Cron reprodutível |
 | SAFE-001 | Idempotência | Evitar duplicações | PENDENTE | Retry não duplica lote |
 | BATCH-001 | Lotes | Gerar múltiplos tickets independentes | PENDENTE | N tickets rastreados individualmente |
 | UI-001 | Painel | Editar recorrências sem alterar código | PENDENTE | CRUD funcional e simples |
@@ -62,8 +62,17 @@ Resultados confirmados:
 - diretório `storage` com permissão `750` e `app.sqlite` com permissão `660`;
 - nenhum ticket criado no HESK.
 
-## Próxima etapa
+## SCH-001 aguardando homologação
 
-### SCH-001 — Scheduler
+A implementação seleciona recorrências ativas e vencidas, calcula a próxima ocorrência na timezone configurada, cria uma `recurrence_execution` pendente e atualiza `next_run_at` na mesma transação.
 
-Objetivo: detectar recorrências vencidas e preparar sua execução pelo Cron. A SCH-001 deverá ser iniciada em tarefa própria; este registro de homologação não implementa scheduler nem Cron.
+Foram definidos:
+
+- modos `check` sem escrita e `run` com persistência;
+- limite padrão de 100 recorrências, configurável entre 1 e 1000;
+- uma competência por recorrência em cada run;
+- cálculo civil para day, week, month e year, com ajuste de fim de mês;
+- rollback integral entre execution e avanço da recorrência;
+- inspeção somente leitura das executions pela CLI administrativa.
+
+A homologação deverá usar exclusivamente `storage/scheduler-homolog.sqlite`. O `app.sqlite` real e sua recorrência ID `1` não devem ser alterados. SAFE-001 e BATCH-001 permanecem pendentes.

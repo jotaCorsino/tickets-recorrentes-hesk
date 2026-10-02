@@ -30,7 +30,7 @@ Já foram identificados os campos, categorias, responsáveis e permissões neces
 
 **Situação atual:** a prova de conceito PHP CLI e a persistência própria em SQLite foram homologadas com sucesso no servidor real. A CFG-001 confirmou migrations idempotentes, foreign keys, WAL, normalização UTC e administração da recorrência sem criar tickets no HESK.
 
-**Próxima etapa:** SCH-001 — implementar o scheduler responsável por detectar recorrências vencidas, em tarefa própria e após seu planejamento específico.
+**Situação da etapa atual:** a SCH-001 implementa a detecção de recorrências vencidas, o cálculo civil da próxima execução e o registro transacional de executions pendentes. A implementação aguarda homologação em banco SQLite separado e não cria tickets no HESK.
 
 **Em resumo:** o painel será responsável por administrar **o que, quando e quantos chamados devem ser criados**; um único Cron fará a verificação periódica; e o PHP realizará a criação dos tickets através do próprio HESK, com controle de recorrência e prevenção de duplicidades.
 
@@ -123,7 +123,7 @@ Valores já identificados:
 | BASE-001 | Baseline manual | Criar o ticket de referência que a automação deverá reproduzir | CONCLUÍDO | Ticket 42 criado e validado visualmente |
 | POC-001 | Prova de conceito | Criar 1 ticket WORKSTATION de teste pelo mecanismo correto do HESK | CONCLUÍDO | Ticket criado via CLI com campos, responsável e notificações corretos |
 | CFG-001 | Modelo de recorrência | Definir estrutura configurável de empresa, frequência, quantidade e ticket | CONCLUÍDO | Configuração persistente validada |
-| SCH-001 | Scheduler | Implementar execução por Cron e cálculo de recorrências vencidas | PENDENTE | Execução automática controlada pelo cPanel |
+| SCH-001 | Scheduler | Implementar execução por Cron e cálculo de recorrências vencidas | AGUARDANDO_HOMOLOGACAO | Execução automática controlada pelo cPanel |
 | BATCH-001 | Geração em lote | Criar N tickets independentes em uma execução | PENDENTE | Lote criado com rastreabilidade individual |
 | SAFE-001 | Idempotência | Impedir duplicação por reexecução do Cron | PENDENTE | Mesma competência não gera tickets duplicados |
 | UI-001 | Administração | Criar interface simples para editar recorrências | PENDENTE | Frequência, volume e parâmetros alteráveis sem editar PHP |
@@ -162,6 +162,7 @@ Cada tarefa deverá ser executada isoladamente.
 - [Baseline manual da POC](docs/05-POC-MANUAL.md)
 - [Implementação e homologação da POC CLI](docs/06-POC-CLI.md)
 - [Persistência e modelo de recorrência](docs/07-PERSISTENCIA.md)
+- [Scheduler de recorrências](docs/08-SCHEDULER.md)
 
 ## Princípio do projeto
 
