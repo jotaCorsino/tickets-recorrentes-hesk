@@ -2,9 +2,9 @@
 
 ## Estado
 
-`POC-001`: **AGUARDANDO_HOMOLOGACAO**.
+`POC-001`: **CONCLUÍDO**.
 
-Os testes locais validam sintaxe e comportamento isolado da linha de comando. A conexão com o banco e a criação real do ticket somente podem ser homologadas no servidor que contém o HESK 3.7.12.
+Os testes locais validaram sintaxe e comportamento isolado da linha de comando. A homologação no servidor HESK 3.7.12 também foi concluída com sucesso em 02/10/2026.
 
 ## Escopo implementado
 
@@ -114,6 +114,25 @@ HESK_PATH=/home/tech2612/suporte.technolife.net.br /usr/local/bin/php bin/poc-cr
 
 ## Homologação no HESK
 
-Comparar o ticket criado com a baseline manual `42`, sem reutilizar o tracking ID `L32-DAG-R778`. Validar os dez itens de `docs/05-POC-MANUAL.md`, em especial o relacionamento em `ticket_to_customer` e a ausência de e-mail ao solicitante.
+Homologação concluída em 02/10/2026.
 
-Não marcar `POC-001` como `CONCLUÍDO` antes dessa verificação no ambiente real.
+O modo `--check` retornou `CHECK OK` no ambiente real e confirmou HESK 3.7.12, solicitante 21, categoria 5, responsável/autor 4, prioridade Baixa (ID 3), status Novo e os campos personalizados da baseline, sem criar ticket.
+
+Uma única execução de `--execute` criou:
+
+- ticket `43`;
+- tracking ID `299-RY2-QZ4L`;
+- assunto correto;
+- solicitante `Automação Technolife`;
+- categoria `WORKSTATION`;
+- prioridade `Baixa`;
+- status `Novo`;
+- responsável `João Paulo Corsino`;
+- `custom7=Presencial`;
+- `custom9=WINDOWS`;
+- `custom10=REQ_Manutenção preventiva`;
+- `custom15=TECHNOLIFE`;
+- `custom16` vazio;
+- sem data de vencimento.
+
+A tela do HESK foi conferida visualmente após a criação e os valores correspondem à baseline manual. A POC não invoca `hesk_notifyCustomer()`.
