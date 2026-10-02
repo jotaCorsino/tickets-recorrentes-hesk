@@ -65,6 +65,23 @@ O HESK exige um `customer_id` para o solicitante. Para esta automação:
 
 Assim, o cliente externo não precisa abrir o chamado.
 
+### Situação atual de hesktx_customers
+
+A busca por contas com e-mail `@technolife.net.br` não retornou registros.
+
+Existe, entretanto, um registro:
+
+| ID | Nome | Observação |
+|---:|---|---|
+| 9 | TECHNOLIFE | candidato existente a solicitante interno |
+
+Esse registro ainda não deve ser assumido automaticamente como solicitante definitivo. Antes da POC, deve-se decidir entre:
+
+1. reutilizar o customer `9 - TECHNOLIFE`; ou
+2. criar um customer dedicado à automação, com nome e e-mail internos próprios.
+
+A segunda opção favorece rastreabilidade e separação operacional.
+
 ## Equipe — IDs HESK
 
 Mapeamento observado em `hesktx_users`:
