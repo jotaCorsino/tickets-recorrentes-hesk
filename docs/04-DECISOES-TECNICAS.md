@@ -48,10 +48,18 @@
 
 **Decisão:** implementação por tarefas isoladas, branches e PRs, sempre com homologação antes da próxima etapa.
 
+## ADR-010 — IDs de equipe validados separadamente do solicitante
+
+**Decisão:** usar os IDs de `hesktx_users` apenas para usuários da equipe, como responsável e autor interno.
+
+**Mapeamento atual:** System=1, Nilton Teodoro=2, João Gabriel Silveira=3 e João Paulo Corsino=4.
+
+**Motivo:** o solicitante do ticket usa `customer_id`, proveniente de `hesktx_customers`, e não um ID de `hesktx_users`.
+
 ## Pontos ainda pendentes
 
-- ID da conta interna solicitante;
-- IDs dos técnicos no HESK;
+- ID da conta interna solicitante em `hesktx_customers`;
+- confirmar acesso do técnico escolhido à categoria `5 - WORKSTATION`, inclusive por grupos de permissão;
 - modelo real completo das manutenções preventivas;
 - decisão de persistência da aplicação;
 - estratégia final de bootstrap do HESK para CLI.
