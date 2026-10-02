@@ -65,22 +65,17 @@ O HESK exige um `customer_id` para o solicitante. Para esta automação:
 
 Assim, o cliente externo não precisa abrir o chamado.
 
-### Situação atual de hesktx_customers
+### Solicitante dedicado criado
 
-A busca por contas com e-mail `@technolife.net.br` não retornou registros.
+Foi criado um customer específico para a automação:
 
-Existe, entretanto, um registro:
+| ID | Nome | E-mail | verified |
+|---:|---|---|---:|
+| 21 | Automação Technolife | teste@automacao.net.br | 0 |
 
-| ID | Nome | Observação |
-|---:|---|---|
-| 9 | TECHNOLIFE | candidato existente a solicitante interno |
+Para a POC, o solicitante será `customer_id=21`.
 
-Esse registro ainda não deve ser assumido automaticamente como solicitante definitivo. Antes da POC, deve-se decidir entre:
-
-1. reutilizar o customer `9 - TECHNOLIFE`; ou
-2. criar um customer dedicado à automação, com nome e e-mail internos próprios.
-
-A segunda opção favorece rastreabilidade e separação operacional.
+O campo de e-mail desta base não é utilizado operacionalmente no fluxo atual, e os registros existentes usam endereços de teste/inválidos. Mesmo assim, a opção **Enviar notificação por e-mail ao cliente** deve permanecer desabilitada nos tickets automáticos.
 
 ## Equipe — IDs HESK
 
