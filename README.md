@@ -28,9 +28,9 @@ execução é registrada para evitar duplicidade
 
 Já foram identificados os campos, categorias, responsáveis e permissões necessários. Também foi criado o solicitante interno **Automação Technolife** e validado manualmente um ticket de manutenção preventiva que servirá como referência para a implementação.
 
-**Situação atual:** a prova de conceito PHP CLI e a persistência própria em SQLite foram homologadas com sucesso no servidor real. A CFG-001 confirmou migrations idempotentes, foreign keys, WAL, normalização UTC e administração da recorrência sem criar tickets no HESK.
+**Base homologada:** a prova de conceito PHP CLI e a persistência própria em SQLite foram homologadas com sucesso no servidor real. A CFG-001 confirmou migrations idempotentes, foreign keys, WAL, normalização UTC e administração da recorrência sem criar tickets no HESK.
 
-**Situação da etapa atual:** a SCH-001 implementa a detecção de recorrências vencidas, o cálculo civil da próxima execução e o registro transacional de executions pendentes. A implementação aguarda homologação em banco SQLite separado e não cria tickets no HESK.
+**Situação atual:** a SCH-001 também foi homologada com sucesso no servidor real. O dry run não persistiu alterações; dois runs processaram exatamente uma competência cada, criaram duas executions pendentes e avançaram `next_run_at` até `2026-10-30T12:00:00Z`. O banco isolado foi removido, o `app.sqlite` permaneceu intacto e nenhum ticket foi criado no HESK. Nenhuma próxima implementação foi iniciada.
 
 **Em resumo:** o painel será responsável por administrar **o que, quando e quantos chamados devem ser criados**; um único Cron fará a verificação periódica; e o PHP realizará a criação dos tickets através do próprio HESK, com controle de recorrência e prevenção de duplicidades.
 
@@ -123,7 +123,7 @@ Valores já identificados:
 | BASE-001 | Baseline manual | Criar o ticket de referência que a automação deverá reproduzir | CONCLUÍDO | Ticket 42 criado e validado visualmente |
 | POC-001 | Prova de conceito | Criar 1 ticket WORKSTATION de teste pelo mecanismo correto do HESK | CONCLUÍDO | Ticket criado via CLI com campos, responsável e notificações corretos |
 | CFG-001 | Modelo de recorrência | Definir estrutura configurável de empresa, frequência, quantidade e ticket | CONCLUÍDO | Configuração persistente validada |
-| SCH-001 | Scheduler | Implementar execução por Cron e cálculo de recorrências vencidas | AGUARDANDO_HOMOLOGACAO | Execução automática controlada pelo cPanel |
+| SCH-001 | Scheduler | Implementar execução por Cron e cálculo de recorrências vencidas | CONCLUÍDO | Execução automática controlada pelo cPanel |
 | BATCH-001 | Geração em lote | Criar N tickets independentes em uma execução | PENDENTE | Lote criado com rastreabilidade individual |
 | SAFE-001 | Idempotência | Impedir duplicação por reexecução do Cron | PENDENTE | Mesma competência não gera tickets duplicados |
 | UI-001 | Administração | Criar interface simples para editar recorrências | PENDENTE | Frequência, volume e parâmetros alteráveis sem editar PHP |

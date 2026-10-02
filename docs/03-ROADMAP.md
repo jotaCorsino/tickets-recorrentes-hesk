@@ -9,7 +9,7 @@
 | BASE-001 | Baseline manual | Criar ticket de referência para comparação | CONCLUÍDO | Ticket 42 criado e validado visualmente |
 | POC-001 | Ticket único | Criar um ticket real de teste via CLI | CONCLUÍDO | Ticket correto no HESK, sem notificação indevida |
 | CFG-001 | Persistência | Modelar recorrências e execuções | CONCLUÍDO | Estrutura persistente versionada |
-| SCH-001 | Scheduler | Detectar recorrências vencidas | AGUARDANDO_HOMOLOGACAO | Execução por Cron reprodutível |
+| SCH-001 | Scheduler | Detectar recorrências vencidas | CONCLUÍDO | Execução por Cron reprodutível |
 | SAFE-001 | Idempotência | Evitar duplicações | PENDENTE | Retry não duplica lote |
 | BATCH-001 | Lotes | Gerar múltiplos tickets independentes | PENDENTE | N tickets rastreados individualmente |
 | UI-001 | Painel | Editar recorrências sem alterar código | PENDENTE | CRUD funcional e simples |
@@ -62,17 +62,23 @@ Resultados confirmados:
 - diretório `storage` com permissão `750` e `app.sqlite` com permissão `660`;
 - nenhum ticket criado no HESK.
 
-## SCH-001 aguardando homologação
+## SCH-001 homologada
 
-A implementação seleciona recorrências ativas e vencidas, calcula a próxima ocorrência na timezone configurada, cria uma `recurrence_execution` pendente e atualiza `next_run_at` na mesma transação.
+Em 02/10/2026, o scheduler foi homologado no servidor real usando exclusivamente:
 
-Foram definidos:
+```text
+/home/tech2612/hesk-recorrencias/storage/scheduler-homolog.sqlite
+```
 
-- modos `check` sem escrita e `run` com persistência;
-- limite padrão de 100 recorrências, configurável entre 1 e 1000;
-- uma competência por recorrência em cada run;
-- cálculo civil para day, week, month e year, com ajuste de fim de mês;
-- rollback integral entre execution e avanço da recorrência;
-- inspeção somente leitura das executions pela CLI administrativa.
+Resultados confirmados:
 
-A homologação deverá usar exclusivamente `storage/scheduler-homolog.sqlite`. O `app.sqlite` real e sua recorrência ID `1` não devem ser alterados. SAFE-001 e BATCH-001 permanecem pendentes.
+- migration e criação da recorrência ID `1` executadas normalmente;
+- `check` encontrou uma recorrência vencida e calculou `2026-09-30T12:00:00Z` sem persistir alterações;
+- primeiro run criou a execution `1` para `2026-08-31T12:00:00Z` e avançou uma competência;
+- segundo run criou a execution `2` para `2026-09-30T12:00:00Z` e avançou para `2026-10-30T12:00:00Z`;
+- as duas executions ficaram `pending`, sem início, término ou erro;
+- check final encontrou zero recorrências vencidas;
+- recorrência deixada desabilitada e banco isolado, WAL e SHM removidos;
+- `app.sqlite` real permaneceu intacto e nenhum ticket foi criado no HESK.
+
+SAFE-001 e BATCH-001 continuam `PENDENTE`. Nenhuma delas foi iniciada por este encerramento.

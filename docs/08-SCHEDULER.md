@@ -1,6 +1,6 @@
 # 08 — Scheduler de recorrências
 
-**Status da SCH-001:** `AGUARDANDO_HOMOLOGACAO`
+**Status da SCH-001:** `CONCLUÍDO`
 
 ## Objetivo e limite
 
@@ -178,6 +178,59 @@ Resultados esperados:
 - nenhum ticket é criado no HESK;
 - os arquivos do banco isolado são removidos ao final;
 - `/home/tech2612/hesk-recorrencias/storage/app.sqlite` não é tocado.
+
+## Resultado da homologação real
+
+A SCH-001 foi homologada com sucesso no servidor real em 02/10/2026, usando somente o banco isolado:
+
+```text
+/home/tech2612/hesk-recorrencias/storage/scheduler-homolog.sqlite
+```
+
+A migration foi aplicada normalmente e a recorrência de homologação foi criada com ID `1` e `next_run_at=2026-08-31T12:00:00Z`.
+
+### Dry run
+
+O modo `check` encontrou uma recorrência vencida, com:
+
+```text
+scheduled_for: 2026-08-31T12:00:00Z
+next_run_at calculado: 2026-09-30T12:00:00Z
+```
+
+Nenhuma alteração foi persistida e a lista de executions continuou vazia.
+
+### Primeiro run
+
+O primeiro `run` retornou uma processada, zero ignoradas e zero erros. Ele criou a execution `1` com:
+
+- `scheduled_for=2026-08-31T12:00:00Z`;
+- `status=pending`;
+- `expected_count=1`;
+- `created_count=0`;
+- `started_at=null`;
+- `finished_at=null`;
+- `error_message=null`.
+
+O `next_run_at` avançou para `2026-09-30T12:00:00Z`.
+
+### Segundo run e catch-up
+
+O segundo `run` também retornou uma processada, zero ignoradas e zero erros. Ele criou somente a execution `2`, para `scheduled_for=2026-09-30T12:00:00Z`, e avançou `next_run_at` para `2026-10-30T12:00:00Z`.
+
+Foram confirmadas exatamente duas executions, uma para cada competência processada. Isso validou a política conservadora de uma competência por recorrência por run.
+
+O check final informou zero recorrências vencidas e não realizou alterações.
+
+### Encerramento e isolamento
+
+- recorrência ID `1` deixada com `enabled=false`;
+- `scheduler-homolog.sqlite` removido;
+- auxiliares `-wal` e `-shm` removidos;
+- `/home/tech2612/hesk-recorrencias/storage/app.sqlite` permaneceu intacto;
+- nenhum ticket foi criado no HESK.
+
+Com esses resultados, a SCH-001 está concluída. SAFE-001 e BATCH-001 permanecem pendentes e não foram iniciadas.
 
 ## Exemplo futuro de Cron
 
