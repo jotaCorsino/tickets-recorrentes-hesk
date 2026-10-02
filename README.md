@@ -132,12 +132,6 @@ Valores já identificados:
 
 Use `BLOQUEADO` somente quando existir impedimento real.
 
-## Papéis
-
-- **João** — owner, operador e responsável pela homologação.
-- **ChatGPT** — arquiteto, planejador, revisor e mantenedor da documentação de referência.
-- **Codex** — engenheiro de implementação: inspeciona, implementa, testa, corrige e atualiza a documentação técnica da tarefa.
-
 ## Fluxo de trabalho com Codex
 
 Cada tarefa deverá ser executada isoladamente.
