@@ -6,6 +6,7 @@
 |---|---|---|---|---|
 | KB-001 | Fundação documental | Consolidar ambiente, regras e arquitetura inicial | CONCLUÍDO | Documentação inicial publicada |
 | ARC-001 | Arquitetura HESK | Confirmar fluxo nativo e estratégia de integração | AGUARDANDO_HOMOLOGACAO | Fluxo e restrições documentados |
+| BASE-001 | Baseline manual | Criar ticket de referência para comparação | CONCLUÍDO | Ticket 42 criado e validado visualmente |
 | POC-001 | Ticket único | Criar um ticket real de teste via CLI | PENDENTE | Ticket correto no HESK, sem notificação indevida |
 | CFG-001 | Persistência | Modelar recorrências e execuções | PENDENTE | Estrutura persistente versionada |
 | SCH-001 | Scheduler | Detectar recorrências vencidas | PENDENTE | Execução por Cron reprodutível |
@@ -15,24 +16,33 @@
 | DEP-001 | cPanel | Implantar no ambiente real | PENDENTE | Deploy e Cron documentados |
 | OPS-001 | Operação | Criar manual técnico | PENDENTE | Instalação, uso, logs, falhas e recuperação documentados |
 
+## Baseline validada
+
+Ticket manual de referência:
+
+- número: `42`;
+- tracking ID: `L32-DAG-R778`;
+- solicitante: `Automação Technolife` (`customer_id=21`);
+- categoria: `WORKSTATION`;
+- prioridade: `Baixa`;
+- status: `Novo`;
+- responsável: `João Paulo Corsino` (`user_id=4`);
+- atendimento: `Presencial`;
+- subcategoria: `WINDOWS`;
+- problema/requisição: `REQ_Manutenção preventiva`;
+- cliente: `TECHNOLIFE`;
+- patrimônio: vazio;
+- vencimento: nenhum.
+
+Ver `docs/05-POC-MANUAL.md`.
+
 ## Próxima tarefa
 
 ### POC-001 — Ticket único
 
 Objetivo: validar a integração mínima com HESK 3.7.12.
 
-Cenário alvo:
-
-- categoria: WORKSTATION;
-- subcategoria: WINDOWS;
-- problema/requisição: REQ_Manutenção preventiva;
-- empresa: empresa de teste;
-- solicitante: conta interna;
-- responsável: técnico definido;
-- status: Novo;
-- prioridade: Baixa;
-- notificar solicitante: não;
-- sem anexos.
+Cenário alvo: reproduzir via CLI a baseline manual documentada em `docs/05-POC-MANUAL.md`.
 
 Não implementar nesta tarefa:
 
