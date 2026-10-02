@@ -66,10 +66,17 @@
 
 A POC pode reutilizar o customer 9 somente se isso for deliberadamente aprovado e validado como selecionável no formulário administrativo.
 
+## ADR-012 — Técnicos 3 e 4 habilitados para WORKSTATION
+
+**Decisão:** João Gabriel Silveira (`user_id=3`) e João Paulo Corsino (`user_id=4`) são responsáveis válidos para a categoria `5 - WORKSTATION`.
+
+**Evidência operacional:** ambos pertencem ao grupo de permissão 2, e esse grupo possui acesso às categorias 1 a 9.
+
+**Motivo:** o HESK considera acesso por grupo de permissão ao validar o responsável do ticket.
+
 ## Pontos ainda pendentes
 
 - definir se o solicitante será `customer_id=9 (TECHNOLIFE)` ou uma nova conta dedicada;
-- confirmar acesso do técnico escolhido à categoria `5 - WORKSTATION`, inclusive por grupos de permissão;
 - modelo real completo das manutenções preventivas;
 - decisão de persistência da aplicação;
 - estratégia final de bootstrap do HESK para CLI.
