@@ -82,7 +82,8 @@ Valores já identificados:
 |---|---|---|---|---|
 | KB-001 | Fundação documental | Criar base de conhecimento e regras do projeto | CONCLUÍDO | README, AGENTS e documentação inicial publicados |
 | ARC-001 | Arquitetura HESK | Mapear fluxo nativo de criação de ticket e pontos de integração | AGUARDANDO_HOMOLOGACAO | Fluxo `new_ticket → admin_submit_ticket → hesk_newTicket` documentado |
-| POC-001 | Prova de conceito | Criar 1 ticket WORKSTATION de teste pelo mecanismo correto do HESK | PENDENTE | Ticket criado com campos, responsável e notificações corretos |
+| BASE-001 | Baseline manual | Criar o ticket de referência que a automação deverá reproduzir | CONCLUÍDO | Ticket 42 criado e validado visualmente |
+| POC-001 | Prova de conceito | Criar 1 ticket WORKSTATION de teste pelo mecanismo correto do HESK | PENDENTE | Ticket criado via CLI com campos, responsável e notificações corretos |
 | CFG-001 | Modelo de recorrência | Definir estrutura configurável de empresa, frequência, quantidade e ticket | PENDENTE | Configuração persistente validada |
 | SCH-001 | Scheduler | Implementar execução por Cron e cálculo de recorrências vencidas | PENDENTE | Execução automática controlada pelo cPanel |
 | BATCH-001 | Geração em lote | Criar N tickets independentes em uma execução | PENDENTE | Lote criado com rastreabilidade individual |
@@ -126,6 +127,7 @@ Cada tarefa deverá ser executada isoladamente.
 - [Arquitetura proposta](docs/02-ARQUITETURA.md)
 - [Roadmap](docs/03-ROADMAP.md)
 - [Decisões técnicas](docs/04-DECISOES-TECNICAS.md)
+- [Baseline manual da POC](docs/05-POC-MANUAL.md)
 
 ## Princípio do projeto
 
