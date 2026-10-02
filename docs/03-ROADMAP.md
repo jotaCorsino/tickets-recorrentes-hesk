@@ -8,7 +8,7 @@
 | ARC-001 | Arquitetura HESK | Confirmar fluxo nativo e estratégia de integração | CONCLUÍDO | Fluxo e restrições documentados |
 | BASE-001 | Baseline manual | Criar ticket de referência para comparação | CONCLUÍDO | Ticket 42 criado e validado visualmente |
 | POC-001 | Ticket único | Criar um ticket real de teste via CLI | CONCLUÍDO | Ticket correto no HESK, sem notificação indevida |
-| CFG-001 | Persistência | Modelar recorrências e execuções | AGUARDANDO_HOMOLOGACAO | Estrutura persistente versionada |
+| CFG-001 | Persistência | Modelar recorrências e execuções | CONCLUÍDO | Estrutura persistente versionada |
 | SCH-001 | Scheduler | Detectar recorrências vencidas | PENDENTE | Execução por Cron reprodutível |
 | SAFE-001 | Idempotência | Evitar duplicações | PENDENTE | Retry não duplica lote |
 | BATCH-001 | Lotes | Gerar múltiplos tickets independentes | PENDENTE | N tickets rastreados individualmente |
@@ -42,12 +42,28 @@ Em 02/10/2026, o modo `--check` foi executado no servidor real com `CHECK OK`, s
 
 A conferência visual confirmou solicitante, categoria, prioridade, status, responsável, campos personalizados, assunto, mensagem e ausência de vencimento conforme a baseline manual. A implementação não chama a rotina de notificação ao solicitante.
 
-## Etapa em homologação
+## CFG-001 homologada
 
-### CFG-001 — Persistência
+Em 02/10/2026, a persistência foi homologada no servidor real com o banco:
 
-Foi implementado um banco SQLite próprio, com migrations determinísticas, repositórios, validações, CLI administrativa e testes automatizados. A estrutura registra recorrências e execuções sem acoplar a aplicação ao MariaDB do HESK.
+```text
+/home/tech2612/hesk-recorrencias/storage/app.sqlite
+```
 
-A homologação deve confirmar no cPanel as extensões PHP, a criação do arquivo no caminho planejado, a aplicação idempotente das migrations e o ciclo `create/list/show/disable/enable`.
+Resultados confirmados:
 
-Nenhuma atividade de SCH-001 deve começar antes da homologação da CFG-001.
+- migration `001_initial_schema` aplicada com sucesso;
+- segunda execução de `migrate` sem migrations pendentes;
+- `foreign_keys=1` e `journal_mode=wal`;
+- recorrência de exemplo criada com ID `1`;
+- `next_run_at` normalizado para `2027-01-15T12:00:00Z`;
+- comandos `list`, `show --id=1`, `disable` e `enable` aprovados;
+- recorrência ID `1` deixada desabilitada ao final;
+- diretório `storage` com permissão `750` e `app.sqlite` com permissão `660`;
+- nenhum ticket criado no HESK.
+
+## Próxima etapa
+
+### SCH-001 — Scheduler
+
+Objetivo: detectar recorrências vencidas e preparar sua execução pelo Cron. A SCH-001 deverá ser iniciada em tarefa própria; este registro de homologação não implementa scheduler nem Cron.

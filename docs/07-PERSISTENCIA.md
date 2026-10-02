@@ -1,5 +1,7 @@
 # 07 — Persistência e modelo de recorrência
 
+**Status da CFG-001:** `CONCLUÍDO`
+
 ## Escopo da CFG-001
 
 A CFG-001 cria a base persistente da aplicação, sem implementar scheduler, Cron, cálculo de próxima execução, geração em lote ou criação de tickets. A CLI desta etapa não carrega o bootstrap do HESK.
@@ -176,6 +178,26 @@ Critérios esperados:
 - nenhum ticket é criado no HESK.
 
 Após validar, desative a recorrência de exemplo para preservá-la com rastreabilidade. A CLI não oferece exclusão física.
+
+## Resultado da homologação real
+
+A CFG-001 foi homologada com sucesso no servidor real em 02/10/2026.
+
+- banco criado em `/home/tech2612/hesk-recorrencias/storage/app.sqlite`;
+- migration `001_initial_schema` aplicada com sucesso;
+- segunda execução de `migrate` retornou `Migrations aplicadas: nenhuma`;
+- integridade referencial confirmada com `foreign_keys: 1`;
+- modo WAL confirmado com `journal_mode: wal`;
+- recorrência de exemplo criada com ID `1`;
+- `next_run_at` normalizado para `2027-01-15T12:00:00Z`;
+- comandos `list` e `show --id=1` aprovados;
+- comandos `disable` e `enable` aprovados;
+- recorrência ID `1` deixada com `enabled=false` ao final;
+- diretório `storage` confirmado com permissão `750`;
+- arquivo `app.sqlite` confirmado com permissão `660`;
+- nenhum ticket foi criado no HESK durante a homologação.
+
+Com esses resultados, a camada de persistência está concluída. Scheduler, Cron e execução de recorrências permanecem fora deste escopo e pertencem à SCH-001.
 
 ## Testes locais
 
