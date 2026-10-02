@@ -230,7 +230,7 @@ O check final informou zero recorrências vencidas e não realizou alterações.
 - `/home/tech2612/hesk-recorrencias/storage/app.sqlite` permaneceu intacto;
 - nenhum ticket foi criado no HESK.
 
-Com esses resultados, a SCH-001 está concluída. SAFE-001 e BATCH-001 permanecem pendentes e não foram iniciadas.
+Com esses resultados, a SCH-001 está concluída. No encerramento dessa etapa, SAFE-001 e BATCH-001 ainda permaneciam pendentes e não foram iniciadas pela homologação do scheduler.
 
 ## Exemplo futuro de Cron
 

@@ -147,6 +147,23 @@ commit ou rollback integral
 
 O modo `check` encerra antes da transação e apenas relata o que seria feito. Cada chamada processa no máximo uma competência por recorrência, mesmo quando há vários meses de atraso.
 
+Na SAFE-001 foram acrescentados, sem carregar o HESK:
+
+```text
+bin/
+  execution.php
+
+database/migrations/
+  002_execution_leases.sql
+
+src/
+  ExecutionCliOptions.php
+  ExecutionLeaseService.php
+  ImmediateTransaction.php
+```
+
+`RecurrenceExecutionRepository` passou a encapsular seleção de candidato, claim, heartbeat, finalização, retry e listagem. A regra de transição permanece no serviço e a CLI apenas compõe os componentes. A migration 001 homologada não foi alterada.
+
 ## Modelo conceitual da recorrência
 
 Cada recorrência deverá conter, no mínimo:
@@ -196,9 +213,27 @@ recurrence_id + scheduled_for
 
 Antes de gerar qualquer lote, o motor verifica se aquela execução já foi processada.
 
-A CFG-001 já fornece a garantia estrutural `UNIQUE (recurrence_id, scheduled_for)`. Ela impede duas linhas para a mesma ocorrência programada, mas ainda não implementa a política completa de reserva, retry e retomada. Essa política pertence à SAFE-001.
+A CFG-001 fornece a garantia estrutural `UNIQUE (recurrence_id, scheduled_for)`, impedindo duas linhas para a mesma ocorrência programada.
 
-A SCH-001 respeita essa restrição e informa uma execution preexistente como ignorada, sem avançar silenciosamente a recorrência. Locking entre múltiplos workers, retry e recuperação após falha parcial continuam pertencendo à SAFE-001.
+A SCH-001 respeita essa restrição e informa uma execution preexistente como ignorada, sem avançar silenciosamente a recorrência. Ela termina seu trabalho ao criar a execution `pending`.
+
+A SAFE-001 atua na etapa seguinte:
+
+```text
+Scheduler
+    ↓
+execution pending
+    ↓ claim atômico com BEGIN IMMEDIATE
+execution running + lease temporário
+    ↓
+heartbeat ou stale takeover
+    ↓
+[BATCH-001 futuramente]
+    ↓
+succeeded | failed | partial
+```
+
+O claim usa token criptograficamente aleatório como prova de posse. Somente o token do lease ativo pode renovar ou finalizar. `failed` e `partial` precisam de retry explícito, que reaproveita a mesma linha; `succeeded` é terminal. Uma linha `running` antiga sem metadados de lease é tratada como inconsistente e não é tomada automaticamente.
 
 A proteção deve sobreviver a:
 
@@ -206,6 +241,8 @@ A proteção deve sobreviver a:
 - retry manual;
 - interrupção parcial;
 - reinício do processo.
+
+Esta garantia está limitada à posse e às transições da `recurrence_execution`. Ainda não há identidade por item de lote, tracking ID persistido antes da criação nem reconciliação com o HESK. Portanto, SAFE-001 não promete exactly-once por ticket; esse contrato deverá ser completado em BATCH-001 antes de ligar a criação real de tickets.
 
 ## Datas e campos personalizados
 
