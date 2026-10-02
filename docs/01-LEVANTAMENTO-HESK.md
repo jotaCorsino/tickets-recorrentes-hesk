@@ -65,6 +65,21 @@ O HESK exige um `customer_id` para o solicitante. Para esta automação:
 
 Assim, o cliente externo não precisa abrir o chamado.
 
+## Equipe — IDs HESK
+
+Mapeamento observado em `hesktx_users`:
+
+| ID | Nome | Perfil |
+|---:|---|---|
+| 1 | System | administrador |
+| 2 | Nilton Teodoro | administrador |
+| 3 | João Gabriel Silveira | técnico |
+| 4 | João Paulo Corsino | técnico |
+
+Os IDs acima são IDs de **usuários da equipe** e servem para campos como `owner`, `openedby` e `assignedby`. Eles não substituem o `customer_id` do solicitante.
+
+Os técnicos 3 e 4 possuem categorias diretas registradas como `1,2,3` no campo `categories`. Como o HESK também pode conceder acesso a categorias por grupos de permissão, ainda é necessário validar se esses usuários possuem acesso à categoria `5 - WORKSTATION` por esse mecanismo antes de usá-los na POC.
+
 ## Responsável
 
 A tela administrativa permite:
@@ -73,7 +88,7 @@ A tela administrativa permite:
 - atribuição automática;
 - atribuição explícita a um técnico com acesso à categoria.
 
-A automação deverá permitir configurar o técnico responsável.
+A automação deverá permitir configurar o técnico responsável e validar o acesso dele à categoria selecionada.
 
 ## Notificações
 
@@ -93,6 +108,8 @@ Tabelas observadas e relevantes:
 - `hesktx_users`
 - `hesktx_categories`
 - `hesktx_ticket_templates`
+- `hesktx_permission_group_categories`
+- `hesktx_permission_group_members`
 
 A solução não deverá escrever diretamente em `hesktx_tickets`.
 
