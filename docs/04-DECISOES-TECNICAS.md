@@ -93,5 +93,4 @@
 ## Pontos ainda pendentes
 
 - modelo real completo das manutenções preventivas;
-- decisão de persistência da aplicação;
-- homologar o bootstrap e a criação da POC no servidor real.
+- decisão de persistência da aplicação.
