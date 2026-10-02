@@ -180,8 +180,69 @@
 
 **Motivo:** ainda não existem identidade persistente por item, tracking ID reservado antes da criação ou reconciliação após crash. BATCH-001 deverá criar esse contrato antes de habilitar o processamento real.
 
+## ADR-031 — Um item persistente por ticket
+
+**Decisão:** representar cada ticket planejado por uma linha de `recurrence_execution_items`, identificada por `execution_id + item_index`.
+
+**Motivo:** a execution precisa distinguir o progresso, erro e identidade HESK de cada ticket sem tratar o lote como uma operação indivisível.
+
+## ADR-032 — expected_count é o tamanho imutável do lote
+
+**Decisão:** materializar os índices de 1 a `recurrence_execution.expected_count`, sem consultar a `quantity` atual durante retry.
+
+**Motivo:** a quantidade capturada pelo scheduler pertence àquela competência; uma edição posterior da recorrência não deve ampliar nem reduzir trabalho já criado.
+
+## ADR-033 — Tracking ID persistido antes da criação externa
+
+**Decisão:** gerar o tracking ID pelo mecanismo nativo do HESK e salvá-lo no item antes de qualquer chamada a `hesk_newTicket()`.
+
+**Motivo:** um retry após interrupção precisa consultar a mesma identidade e não gerar outro ticket lógico.
+
+## ADR-034 — hesk_newTicket permanece o único caminho de criação
+
+**Decisão:** o projeto não executa `INSERT` ou `UPDATE` direto em `hesktx_tickets`; novos tickets continuam sendo persistidos exclusivamente por `hesk_newTicket()`.
+
+**Motivo:** preservar as regras e relacionamentos mantidos pelo fluxo nativo do HESK.
+
+## ADR-035 — Lookup HESK somente leitura para reconciliação
+
+**Decisão:** consultar `id` e `trackid` por tracking ID antes de criar e depois da criação.
+
+**Motivo:** reconhecer um ticket já persistido permite recuperar o intervalo entre o commit no HESK e o registro de sucesso no SQLite.
+
+## ADR-036 — Retry reutiliza item e tracking ID
+
+**Decisão:** um retry explícito da execution reaproveita as mesmas linhas e nunca substitui um tracking ID já atribuído.
+
+**Motivo:** manter uma identidade estável é condição para reconciliação e auditoria.
+
+## ADR-037 — Item succeeded é preservado
+
+**Decisão:** itens `succeeded` são ignorados nos retries; somente `pending`, `creating` e `failed` podem voltar ao processamento.
+
+**Motivo:** tickets já confirmados não podem ser criados novamente por uma nova tentativa do restante do lote.
+
+## ADR-038 — SQLite e MariaDB não compartilham transação
+
+**Decisão:** não manter `BEGIN IMMEDIATE` aberto enquanto o HESK é consultado ou cria ticket e não tentar compensar uma criação apagando o ticket.
+
+**Motivo:** não há transação distribuída entre os bancos. Persistência antecipada da identidade e reconciliação são a estratégia de recuperação.
+
+## ADR-039 — O lease SAFE protege todas as mutações do lote
+
+**Decisão:** materialização, tracking ID, estados do item, ticket ID, `created_count` e finalização exigem status `running`, token correspondente e lease não expirado. O worker renova o lease antes de cada item e depois de chamadas externas.
+
+**Motivo:** um worker com token inválido, expirado ou substituído por stale takeover não pode alterar o progresso nem processar itens seguintes.
+
+## ADR-040 — Named lock por tracking ID no HESK
+
+**Decisão:** como não foi possível provar uma restrição `UNIQUE` de MariaDB para `trackid` no HESK 3.7.12 estudado, usar `GET_LOCK('tickets-recorrentes:<trackid>', 10)` no gateway. Dentro do lock, repetir o lookup, criar somente se ausente, validar o resultado e executar `RELEASE_LOCK` em `finally`.
+
+**Motivo:** a verificação feita por `hesk_createID()` antes da criação não elimina sozinha duas inserções concorrentes. O lock determinístico fecha essa corrida entre workers que seguem o protocolo da BATCH-001.
+
 ## Pontos ainda pendentes
 
 - modelo real completo das manutenções preventivas;
-- identidade persistente e reconciliação de cada item de lote na BATCH-001;
+- homologação real da BATCH-001 no cPanel;
+- patrimônio e conteúdo individual por item do lote;
 - procedimento administrativo para resolver executions legadas `running` sem lease.

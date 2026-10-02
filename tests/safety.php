@@ -134,10 +134,14 @@ try {
     ]);
 
     $runner = new MigrationRunner($connectionA, dirname(__DIR__) . '/database/migrations');
-    $assertSame(['002_execution_leases'], $runner->migrate(), 'Upgrade de banco existente deve aplicar somente a migration 002');
-    $assertSame([], $runner->migrate(), 'A migration 002 deve ser idempotente');
+    $assertSame(
+        ['002_execution_leases', '003_execution_items'],
+        $runner->migrate(),
+        'Upgrade de banco existente deve aplicar as migrations posteriores à 001'
+    );
+    $assertSame([], $runner->migrate(), 'As migrations posteriores devem ser idempotentes');
     $runner->assertUpToDate();
-    $assertSame(2, (int) $connectionA->query('SELECT COUNT(*) FROM schema_migrations')->fetchColumn(), 'As duas migrations devem estar registradas');
+    $assertSame(3, (int) $connectionA->query('SELECT COUNT(*) FROM schema_migrations')->fetchColumn(), 'As três migrations devem estar registradas');
 
     $columns = $connectionA->query('PRAGMA table_info(recurrence_executions)')->fetchAll(PDO::FETCH_ASSOC);
     $columnNames = array_column($columns, 'name');

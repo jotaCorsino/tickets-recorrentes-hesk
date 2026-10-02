@@ -8,7 +8,7 @@ use InvalidArgumentException;
 
 final class ExecutionCliOptions
 {
-    private const COMMANDS = ['list', 'show', 'claim', 'heartbeat', 'finish', 'retry'];
+    private const COMMANDS = ['list', 'show', 'items', 'claim', 'heartbeat', 'finish', 'retry'];
     private const STATUSES = ['pending', 'running', 'succeeded', 'failed', 'partial'];
     private const RESULTS = ['succeeded', 'failed', 'partial'];
 
@@ -87,6 +87,7 @@ final class ExecutionCliOptions
         $allowed = [
             'list' => ['db-path', 'status'],
             'show' => ['db-path', 'id'],
+            'items' => ['db-path', 'id'],
             'claim' => ['db-path', 'id', 'worker', 'lease-seconds'],
             'heartbeat' => ['db-path', 'id', 'token', 'lease-seconds'],
             'finish' => ['db-path', 'id', 'token', 'result', 'error'],
@@ -120,7 +121,7 @@ final class ExecutionCliOptions
             $id = (int) $options['id'];
         }
 
-        if (in_array($command, ['show', 'heartbeat', 'finish', 'retry'], true) && $id === null) {
+        if (in_array($command, ['show', 'items', 'heartbeat', 'finish', 'retry'], true) && $id === null) {
             throw new InvalidArgumentException("O comando {$command} exige --id.");
         }
 
@@ -193,6 +194,7 @@ SAFE-001 - administração de executions e leases
 Uso:
   php bin/execution.php list [--db-path=/caminho/app.sqlite] [--status=pending]
   php bin/execution.php show [--db-path=/caminho/app.sqlite] --id=1
+  php bin/execution.php items [--db-path=/caminho/app.sqlite] --id=1
   php bin/execution.php claim [--db-path=/caminho/app.sqlite] --worker=nome [--id=1] [--lease-seconds=300]
   php bin/execution.php heartbeat [--db-path=/caminho/app.sqlite] --id=1 --token=<TOKEN> [--lease-seconds=300]
   php bin/execution.php finish [--db-path=/caminho/app.sqlite] --id=1 --token=<TOKEN> --result=succeeded

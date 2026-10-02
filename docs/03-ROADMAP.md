@@ -11,7 +11,7 @@
 | CFG-001 | Persistência | Modelar recorrências e execuções | CONCLUÍDO | Estrutura persistente versionada |
 | SCH-001 | Scheduler | Detectar recorrências vencidas | CONCLUÍDO | Execução por Cron reprodutível |
 | SAFE-001 | Idempotência de execution | Proteger claim, lease e retry da mesma execution | CONCLUÍDO | Uma execution não é processada simultaneamente por dois workers; stale lease e retry preservam a mesma identidade |
-| BATCH-001 | Lotes | Gerar múltiplos tickets independentes | PENDENTE | N tickets rastreados individualmente |
+| BATCH-001 | Lotes | Gerar múltiplos tickets independentes | AGUARDANDO_HOMOLOGACAO | Uma execution materializa N itens persistentes; cada item possui identidade HESK rastreável, retries não recriam itens succeeded e tickets existentes são reconciliados pelo tracking ID |
 | UI-001 | Painel | Editar recorrências sem alterar código | PENDENTE | CRUD funcional e simples |
 | DEP-001 | cPanel | Implantar no ambiente real | PENDENTE | Deploy e Cron documentados |
 | OPS-001 | Operação | Criar manual técnico | PENDENTE | Instalação, uso, logs, falhas e recuperação documentados |
@@ -97,4 +97,12 @@ A primeira tentativa terminou em `failed` com a mensagem controlada. O retry exp
 
 A recorrência foi desabilitada e o banco isolado, WAL e SHM foram removidos. O `app.sqlite` real permaneceu intacto e nenhum ticket foi criado no HESK. O stale takeover por expiração não foi reproduzido manualmente no cPanel; ele permanece coberto por `tests/safety.php`, incluindo novo token, incremento de tentativa e invalidação do token antigo.
 
-SAFE-001 está `CONCLUÍDO`. A garantia continua restrita à `recurrence_execution`; BATCH-001 permanece `PENDENTE` e não foi iniciada.
+SAFE-001 está `CONCLUÍDO`. Sua posse por lease permanece a base usada pelo worker de lotes.
+
+## BATCH-001 aguardando homologação
+
+A implementação local da BATCH-001 está pronta e testada. A migration `003_execution_items` adiciona uma identidade persistente por ticket, com `item_index`, estado, tracking ID, ID do ticket HESK e dados de tentativa. O lote usa o `expected_count` capturado na execution, não a quantidade atual da recorrência.
+
+O worker prepara e persiste o tracking ID antes de acessar a criação externa, consulta o HESK para reconciliar tickets já existentes e chama `hesk_newTicket()` somente quando necessário. A consulta/criação é serializada por um named lock MariaDB derivado do tracking ID. Itens `succeeded` são preservados; retries reutilizam execution, item e tracking ID. `created_count` é derivado da quantidade de itens concluídos.
+
+Os testes locais cobrem sucesso, falha total, lote parcial, retry, crash entre HESK e SQLite, reconciliação, stale takeover e perda de lease. A etapa permanece `AGUARDANDO_HOMOLOGACAO`: ainda é necessário executar o roteiro controlado de `docs/10-BATCH-PROCESSING.md` no cPanel e conferir manualmente os dois tickets reais. UI-001 e DEP-001 não foram iniciadas.

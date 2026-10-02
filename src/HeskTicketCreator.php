@@ -30,27 +30,33 @@ final class HeskTicketCreator
 
         $customer = $customerId > 0 ? \hesk_get_selectable_customer_by_id($customerId) : null;
 
+        $expectedCustomerName = $this->optionalLabel($definition, 'customer_name', $errors);
+
         if ($customer === null) {
             $errors[] = "Solicitante {$customerId} não existe ou não pode ser selecionado para um ticket.";
-        } elseif (!$this->sameLabel((string) $customer['name'], (string) $definition['customer_name'])) {
+        } elseif ($expectedCustomerName !== null
+            && !$this->sameLabel((string) $customer['name'], $expectedCustomerName)) {
             $errors[] = sprintf(
                 'Solicitante %d divergente: encontrado "%s"; esperado "%s".',
                 $customerId,
                 $customer['name'],
-                $definition['customer_name']
+                $expectedCustomerName
             );
         }
 
         $category = $categoryId > 0 ? $this->findCategory($categoryId) : null;
 
+        $expectedCategoryName = $this->optionalLabel($definition, 'category_name', $errors);
+
         if ($category === null) {
             $errors[] = "Categoria {$categoryId} não encontrada.";
-        } elseif (!$this->sameLabel((string) $category['name'], (string) $definition['category_name'])) {
+        } elseif ($expectedCategoryName !== null
+            && !$this->sameLabel((string) $category['name'], $expectedCategoryName)) {
             $errors[] = sprintf(
                 'Categoria %d divergente: encontrada "%s"; esperada "%s".',
                 $categoryId,
                 $category['name'],
-                $definition['category_name']
+                $expectedCategoryName
             );
         }
 
@@ -58,14 +64,17 @@ final class HeskTicketCreator
             ? $this->findStaffWithCategoryAccess($ownerId, $categoryId)
             : null;
 
+        $expectedOwnerName = $this->optionalLabel($definition, 'owner_name', $errors);
+
         if ($owner === null) {
             $errors[] = "Responsável {$ownerId} não está ativo ou não possui acesso à categoria {$categoryId}.";
-        } elseif (!$this->sameLabel((string) $owner['name'], (string) $definition['owner_name'])) {
+        } elseif ($expectedOwnerName !== null
+            && !$this->sameLabel((string) $owner['name'], $expectedOwnerName)) {
             $errors[] = sprintf(
                 'Responsável %d divergente: encontrado "%s"; esperado "%s".',
                 $ownerId,
                 $owner['name'],
-                $definition['owner_name']
+                $expectedOwnerName
             );
         }
 
@@ -75,14 +84,17 @@ final class HeskTicketCreator
                 ? $this->findStaffWithCategoryAccess($openedById, $categoryId)
                 : null);
 
+        $expectedOpenedByName = $this->optionalLabel($definition, 'openedby_name', $errors);
+
         if ($openedBy === null) {
             $errors[] = "Autor interno {$openedById} não está ativo ou não possui acesso à categoria {$categoryId}.";
-        } elseif (!$this->sameLabel((string) $openedBy['name'], (string) $definition['openedby_name'])) {
+        } elseif ($expectedOpenedByName !== null
+            && !$this->sameLabel((string) $openedBy['name'], $expectedOpenedByName)) {
             $errors[] = sprintf(
                 'Autor interno %d divergente: encontrado "%s"; esperado "%s".',
                 $openedById,
                 $openedBy['name'],
-                $definition['openedby_name']
+                $expectedOpenedByName
             );
         }
 
@@ -176,7 +188,7 @@ final class HeskTicketCreator
      * @param array<string, mixed> $definition
      * @return array{id: int, trackid: string, subject: string, owner: int, customer_id: int}
      */
-    public function create(array $definition): array
+    public function create(array $definition, ?string $trackingId = null): array
     {
         global $hesk_settings, $hesklang;
 
@@ -198,6 +210,9 @@ final class HeskTicketCreator
 
         [$message, $messageHtml] = $this->prepareMessage((string) $definition['message']);
 
+        $trackingId = $trackingId ?? $this->generateTrackingId();
+        $this->validateTrackingId($trackingId);
+
         $ticketData = [
             'customer_id' => $validation['customer']['id'],
             'follower_ids' => [],
@@ -207,7 +222,7 @@ final class HeskTicketCreator
             'subject' => \hesk_input((string) $definition['subject']),
             'message' => $message,
             'message_html' => $messageHtml,
-            'trackid' => \hesk_createID(),
+            'trackid' => $trackingId,
             'history' => $history,
             'openedby' => $validation['openedby']['id'],
             'owner' => $validation['owner']['id'],
@@ -236,6 +251,12 @@ final class HeskTicketCreator
             throw new RuntimeException('hesk_newTicket() não retornou a identificação do ticket criado.');
         }
 
+        if (!hash_equals($trackingId, (string) $created['trackid'])) {
+            throw new RuntimeException(
+                "hesk_newTicket() retornou tracking ID divergente do identificador preparado."
+            );
+        }
+
         return [
             'id' => (int) $created['id'],
             'trackid' => (string) $created['trackid'],
@@ -243,6 +264,19 @@ final class HeskTicketCreator
             'owner' => (int) $created['owner'],
             'customer_id' => (int) $ticketData['customer_id'],
         ];
+    }
+
+    public function generateTrackingId(): string
+    {
+        $trackingId = \hesk_createID();
+
+        if (!is_string($trackingId) || trim($trackingId) === '') {
+            throw new RuntimeException('hesk_createID() não conseguiu gerar um tracking ID.');
+        }
+
+        $this->validateTrackingId($trackingId);
+
+        return $trackingId;
     }
 
     /**
@@ -259,6 +293,34 @@ final class HeskTicketCreator
         }
 
         return $value;
+    }
+
+    /**
+     * @param array<string, mixed> $definition
+     * @param list<string> $errors
+     */
+    private function optionalLabel(array $definition, string $key, array &$errors): ?string
+    {
+        if (!array_key_exists($key, $definition)) {
+            return null;
+        }
+
+        $value = $definition[$key];
+
+        if (!is_string($value) || trim($value) === '') {
+            $errors[] = "{$key} deve ser texto não vazio quando informado.";
+            return null;
+        }
+
+        return trim($value);
+    }
+
+    private function validateTrackingId(string $trackingId): void
+    {
+        if ($trackingId !== trim($trackingId)
+            || !preg_match('/^[A-Z0-9-]{1,32}$/D', $trackingId)) {
+            throw new DomainException('Tracking ID HESK inválido.');
+        }
     }
 
     /**

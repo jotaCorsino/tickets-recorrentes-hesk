@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 use TicketsRecorrentesHesk\Database;
 use TicketsRecorrentesHesk\ExecutionCliOptions;
+use TicketsRecorrentesHesk\ExecutionItemRepository;
 use TicketsRecorrentesHesk\ExecutionLeaseService;
 use TicketsRecorrentesHesk\ImmediateTransaction;
 use TicketsRecorrentesHesk\MigrationRunner;
@@ -15,6 +16,7 @@ require dirname(__DIR__) . '/src/Database.php';
 require dirname(__DIR__) . '/src/MigrationRunner.php';
 require dirname(__DIR__) . '/src/RecurrenceValidator.php';
 require dirname(__DIR__) . '/src/RecurrenceExecutionRepository.php';
+require dirname(__DIR__) . '/src/ExecutionItemRepository.php';
 require dirname(__DIR__) . '/src/ImmediateTransaction.php';
 require dirname(__DIR__) . '/src/ExecutionLeaseService.php';
 
@@ -43,6 +45,14 @@ try {
 
     if ($options->command === 'show') {
         echo executionJson(requireExecution($repository, $options->id)) . "\n";
+        exit(0);
+    }
+
+    if ($options->command === 'items') {
+        requireExecution($repository, $options->id);
+        echo executionJson(
+            (new ExecutionItemRepository($connection))->findByExecution((int) $options->id)
+        ) . "\n";
         exit(0);
     }
 

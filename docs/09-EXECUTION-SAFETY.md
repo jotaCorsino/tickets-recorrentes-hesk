@@ -6,7 +6,7 @@
 
 SAFE-001 protege a posse e as transições de uma `recurrence_execution` contra workers concorrentes, Cron sobreposto, interrupção de processo, lease abandonado, retry indevido e uso de token antigo.
 
-Esta etapa não carrega o HESK, não cria tickets, não implementa lote e não altera `recurrence.next_run_at`. Ela opera somente sobre executions já criadas pelo scheduler.
+Isoladamente, esta etapa não carrega o HESK, não cria tickets, não implementa lote e não altera `recurrence.next_run_at`. Ela opera somente sobre executions já criadas pelo scheduler. A BATCH-001 reutiliza este contrato sem criar um mecanismo paralelo de posse.
 
 ## Fluxo e máquina de estados
 
@@ -80,19 +80,19 @@ Finish aceita `succeeded`, `failed` ou `partial` somente com token ativo. Em tod
 
 Retry é administrativo e explícito, somente para `failed` ou `partial`. Ele mantém ID, `recurrence_id`, `scheduled_for`, contagens e `attempt_count`; limpa lease, `error_message`, `started_at` e `finished_at`; e devolve a mesma linha a `pending`. Uma nova linha nunca é criada para retry.
 
-## Limite da garantia e contrato futuro
+## Integração com a BATCH-001
 
-SAFE-001 impede que dois workers processem conscientemente a mesma execution ao mesmo tempo e protege suas transições. Isso ainda não é exactly-once de ticket HESK.
+SAFE-001 impede que dois workers processem conscientemente a mesma execution ao mesmo tempo e protege suas transições. A BATCH-001 acrescenta a identidade de ticket que não pertencia a esta etapa:
 
-Permanecem fora desta etapa:
+- um item SQLite por ticket do lote;
+- tracking ID persistido antes da criação;
+- reconciliação pelo tracking ID após interrupção;
+- preservação de itens `succeeded` no retry;
+- `created_count` derivado dos itens concluídos.
 
-- item persistente por ticket do lote;
-- `hesk_ticket_id` ou tracking ID por item;
-- identificador persistido antes da criação no HESK;
-- reconciliação depois de crash;
-- criação de um ou vários tickets.
+O `BatchProcessor` recebe uma execution já claimed. Antes de cada item, renova o lease; todas as mutações de item e de `created_count` exigem status `running`, token correspondente e `lease_expires_at` futuro. Depois de um lookup ou create externo, o worker renova novamente antes de persistir o resultado. Se perder a posse, para sem finalizar nem processar o item seguinte. Um novo worker assume pelo stale takeover e reconcilia qualquer ticket que tenha sido criado no intervalo.
 
-BATCH-001 deverá persistir a identidade de cada item, reutilizá-la em retries e permitir verificar no HESK se o ticket já existe antes de repetir a criação. Nenhum desses mecanismos é implementado aqui.
+Isso não transforma SQLite e MariaDB em uma transação única. A garantia contra a corrida conhecida usa tracking ID estável, lookup e named lock MariaDB no gateway BATCH; os detalhes e os limites estão em `docs/10-BATCH-PROCESSING.md`.
 
 ## CLI administrativa
 
@@ -108,6 +108,7 @@ Listar e inspecionar sem expor token:
 php bin/execution.php list --db-path=/caminho/app.sqlite
 php bin/execution.php list --db-path=/caminho/app.sqlite --status=pending
 php bin/execution.php show --db-path=/caminho/app.sqlite --id=1
+php bin/execution.php items --db-path=/caminho/app.sqlite --id=1
 ```
 
 Claim da próxima execution ou de um ID específico:
@@ -285,7 +286,7 @@ O stale takeover por expiração do lease não foi reproduzido manualmente nesta
 
 A recorrência ID `1` foi deixada com `enabled=false`. `safe-homolog.sqlite` e os auxiliares `-wal` e `-shm` foram removidos; depois da limpeza, `storage` continha somente `app.sqlite`. As variáveis temporárias de token, claim e caminho do banco foram removidas da sessão.
 
-Com esses resultados, SAFE-001 está concluída. BATCH-001 permanece pendente e não foi iniciada.
+Com esses resultados, SAFE-001 está concluída. A BATCH-001 foi implementada posteriormente e está `AGUARDANDO_HOMOLOGACAO`; isso não altera os resultados históricos desta homologação.
 
 ## Testes locais
 
