@@ -36,7 +36,7 @@ Já foram identificados os campos, categorias, responsáveis e permissões neces
 
 **Base homologada:** a BATCH-001 foi homologada com sucesso no servidor real em 02/10/2026 usando banco isolado. A execution criou dois itens e os tickets HESK `44` e `45`, terminou com `created_count=2` e recusou nova execução como `terminal_succeeded`, sem recriar o lote. O banco isolado foi removido e o hash do `app.sqlite` real permaneceu idêntico. O crash exato entre HESK e SQLite não foi provocado manualmente; lookup, reconciliação e recuperação continuam cobertos pelos testes automatizados.
 
-**Situação da etapa atual:** BATCH-001 está concluída. UI-001 e DEP-001 continuam pendentes e nenhuma próxima implementação foi iniciada.
+**Situação da etapa atual:** BATCH-001 está concluída. UI-001 está em andamento com uma fundação visual navegável e protegida por `ADMIN_UI_ENABLED=1`; o painel ainda usa dados demonstrativos e não grava recorrências. DEP-001 continua pendente.
 
 **Em resumo:** o painel será responsável por administrar **o que, quando e quantos chamados devem ser criados**; um único Cron fará a verificação periódica; e o PHP realizará a criação dos tickets através do próprio HESK, com controle de recorrência e prevenção de duplicidades.
 
@@ -132,7 +132,7 @@ Valores já identificados:
 | SCH-001 | Scheduler | Implementar execução por Cron e cálculo de recorrências vencidas | CONCLUÍDO | Execução automática controlada pelo cPanel |
 | BATCH-001 | Geração em lote | Criar N tickets independentes em uma execução | CONCLUÍDO | Uma execution materializa N itens persistentes; cada item possui identidade HESK rastreável, retries não recriam itens succeeded e tickets existentes são reconciliados pelo tracking ID |
 | SAFE-001 | Idempotência | Proteger posse e transições de cada execution | CONCLUÍDO | Uma execution não é processada simultaneamente por dois workers; stale lease e retry preservam a mesma identidade |
-| UI-001 | Administração | Criar interface simples para editar recorrências | PENDENTE | Frequência, volume e parâmetros alteráveis sem editar PHP |
+| UI-001 | Administração | Criar interface simples para editar recorrências | EM_ANDAMENTO | Frequência, volume e parâmetros alteráveis sem editar PHP |
 | DEP-001 | Implantação | Preparar instalação segura no cPanel | PENDENTE | Deploy reproduzível e Cron configurado |
 | OPS-001 | Operação | Criar manual técnico de instalação, uso e manutenção | PENDENTE | Documentação operacional concluída |
 
@@ -171,6 +171,7 @@ Cada tarefa deverá ser executada isoladamente.
 - [Scheduler de recorrências](docs/08-SCHEDULER.md)
 - [Segurança e idempotência de execution](docs/09-EXECUTION-SAFETY.md)
 - [Processamento de lotes e reconciliação HESK](docs/10-BATCH-PROCESSING.md)
+- [Fundação visual do painel administrativo](docs/11-ADMIN-UI.md)
 
 ## Princípio do projeto
 
