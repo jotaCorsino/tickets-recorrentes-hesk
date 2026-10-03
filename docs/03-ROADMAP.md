@@ -11,7 +11,7 @@
 | CFG-001 | Persistência | Modelar recorrências e execuções | CONCLUÍDO | Estrutura persistente versionada |
 | SCH-001 | Scheduler | Detectar recorrências vencidas | CONCLUÍDO | Execução por Cron reprodutível |
 | SAFE-001 | Idempotência de execution | Proteger claim, lease e retry da mesma execution | CONCLUÍDO | Uma execution não é processada simultaneamente por dois workers; stale lease e retry preservam a mesma identidade |
-| BATCH-001 | Lotes | Gerar múltiplos tickets independentes | PENDENTE | N tickets rastreados individualmente |
+| BATCH-001 | Lotes | Gerar múltiplos tickets independentes | CONCLUÍDO | Uma execution materializa N itens persistentes; cada item possui identidade HESK rastreável, retries não recriam itens succeeded e tickets existentes são reconciliados pelo tracking ID |
 | UI-001 | Painel | Editar recorrências sem alterar código | PENDENTE | CRUD funcional e simples |
 | DEP-001 | cPanel | Implantar no ambiente real | PENDENTE | Deploy e Cron documentados |
 | OPS-001 | Operação | Criar manual técnico | PENDENTE | Instalação, uso, logs, falhas e recuperação documentados |
@@ -97,4 +97,22 @@ A primeira tentativa terminou em `failed` com a mensagem controlada. O retry exp
 
 A recorrência foi desabilitada e o banco isolado, WAL e SHM foram removidos. O `app.sqlite` real permaneceu intacto e nenhum ticket foi criado no HESK. O stale takeover por expiração não foi reproduzido manualmente no cPanel; ele permanece coberto por `tests/safety.php`, incluindo novo token, incremento de tentativa e invalidação do token antigo.
 
-SAFE-001 está `CONCLUÍDO`. A garantia continua restrita à `recurrence_execution`; BATCH-001 permanece `PENDENTE` e não foi iniciada.
+SAFE-001 está `CONCLUÍDO`. Sua posse por lease permanece a base usada pelo worker de lotes.
+
+## BATCH-001 homologada
+
+Em 02/10/2026, a geração em lote foi homologada no servidor real usando exclusivamente:
+
+```text
+/home/tech2612/hesk-recorrencias/storage/batch-homolog.sqlite
+```
+
+O primeiro `migrate` exibiu de forma inconsistente `Migrations aplicadas: nenhuma`. Sem atribuir causa a essa divergência, a inspeção direta de `schema_migrations` confirmou `001_initial_schema`, `002_execution_leases` e `003_execution_items`, todas com `applied_at=2026-10-02T18:41:05Z`; o schema continha as tabelas esperadas, com `foreign_keys=1` e `journal_mode=wal`. A segunda execução informou corretamente que não havia migrations pendentes.
+
+A recorrência ID `1`, com `quantity=2` e `notify_customer=false`, originou a execution ID `1` para `2026-10-01T12:00:00Z` e avançou `next_run_at` para `2027-10-01T12:00:00Z`. O check permaneceu somente leitura: não fez claim, não materializou itens e não criou tickets.
+
+O run real criou os tickets HESK `44` (`XNP-1EU-SDY4`) e `45` (`S8J-V7T-N6QP`). Os dois itens terminaram `succeeded`, com uma tentativa cada; a execution terminou `succeeded`, com `expected_count=2`, `created_count=2`, `attempt_count=1`, erro e lease nulos. A conferência visual validou solicitante, categoria, prioridade, status, responsável, campos personalizados, assunto, mensagem, patrimônio vazio e ausência de vencimento. As telas não comprovaram ausência de envio de notificação; o fluxo homologado estava configurado com `notify_customer=false` e a BATCH-001 não introduz rotina de notificação.
+
+A reexecução foi recusada como `terminal_succeeded` e preservou execution, itens, tracking IDs, IDs dos tickets e contadores, confirmando que o lote concluído não foi recriado. O crash exato entre `hesk_newTicket()` e o sucesso no SQLite não foi provocado manualmente; lookup, reconciliação, crash recovery e named lock permanecem cobertos pelos testes automatizados.
+
+A recorrência foi desabilitada, o banco isolado e seus auxiliares foram removidos, e `storage` voltou a conter somente `app.sqlite`. O hash do banco real permaneceu `732d714ed1aacaa4ac7849bb324817f7f07dd8bcac22ab96126106eee9da9082` antes e depois. BATCH-001 está `CONCLUÍDO`; UI-001 e DEP-001 continuam `PENDENTE` e não foram iniciadas.

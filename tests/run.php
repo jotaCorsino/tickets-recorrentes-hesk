@@ -263,6 +263,11 @@ $assertSame('', $payload['attachments'], 'Payload não deve ter anexos');
 $assertSame('', $payload['due_date'], 'Payload não deve ter vencimento');
 $assertSame('', $payload['custom16'], 'Patrimônio deve permanecer vazio');
 
+$explicit = $creator->create($definition, 'XYZ-123-ABCD');
+$assertSame(2, $GLOBALS['new_ticket_calls'], 'Create explícito deve continuar usando hesk_newTicket uma vez');
+$assertSame('XYZ-123-ABCD', $explicit['trackid'], 'Create deve preservar o tracking ID explícito');
+$assertSame('XYZ-123-ABCD', $GLOBALS['created_ticket_data']['trackid'], 'Payload deve receber o tracking ID explícito');
+
 if ($failures !== []) {
     fwrite(STDERR, "TESTES FALHARAM\n- " . implode("\n- ", $failures) . "\n");
     exit(1);

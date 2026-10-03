@@ -15,13 +15,15 @@ Seleção das recorrências vencidas
     ↓
 Proteção contra duplicidade
     ↓
-Montagem do ticket
+Materialização de N itens persistentes
+    ↓
+Tracking ID persistido e reconciliação
     ↓
 Adaptador HESK
     ↓
 hesk_newTicket(...)
     ↓
-Registro da execução
+Item succeeded e contagem sincronizada
 ```
 
 ## Fluxo nativo estudado
@@ -164,6 +166,25 @@ src/
 
 `RecurrenceExecutionRepository` passou a encapsular seleção de candidato, claim, heartbeat, finalização, retry e listagem. A regra de transição permanece no serviço e a CLI apenas compõe os componentes. A migration 001 homologada não foi alterada.
 
+Na BATCH-001 foram acrescentados:
+
+```text
+bin/
+  worker.php
+
+database/migrations/
+  003_execution_items.sql
+
+src/
+  BatchProcessor.php
+  ExecutionItemRepository.php
+  TicketGateway.php
+  HeskTicketGateway.php
+  WorkerCliOptions.php
+```
+
+Cada `recurrence_execution` materializa exatamente `expected_count` itens. A abstração `TicketGateway` permite testar o motor sem carregar o HESK; sua implementação real gera e consulta tracking IDs pelo HESK, usa `hesk_newTicket()` como único caminho de criação e serializa a consulta/criação de cada tracking ID com um named lock do MariaDB. O comando `execution.php items` fornece inspeção somente leitura.
+
 ## Modelo conceitual da recorrência
 
 Cada recorrência deverá conter, no mínimo:
@@ -228,7 +249,11 @@ execution running + lease temporário
     ↓
 heartbeat ou stale takeover
     ↓
-[BATCH-001 futuramente]
+materialização idempotente de expected_count itens
+    ↓
+tracking ID persistido antes da criação
+    ↓
+lookup HESK e criação somente quando ausente
     ↓
 succeeded | failed | partial
 ```
@@ -242,7 +267,9 @@ A proteção deve sobreviver a:
 - interrupção parcial;
 - reinício do processo.
 
-Esta garantia está limitada à posse e às transições da `recurrence_execution`. Ainda não há identidade por item de lote, tracking ID persistido antes da criação nem reconciliação com o HESK. Portanto, SAFE-001 não promete exactly-once por ticket; esse contrato deverá ser completado em BATCH-001 antes de ligar a criação real de tickets.
+A BATCH-001 complementa essa proteção com uma identidade SQLite por ticket, tracking ID estável e reconciliação antes de qualquer nova criação. Itens `succeeded` não são recriados, e itens `creating` ou `failed` reutilizam o mesmo tracking ID no retry.
+
+SQLite e MariaDB não compartilham transação. Para a corrida conhecida no HESK, o gateway real usa `GET_LOCK('tickets-recorrentes:<trackid>', 10)`, repete o lookup dentro do lock, cria somente se o ticket continuar ausente e libera com `RELEASE_LOCK` em `finally`. Se o processo cair depois da criação no HESK e antes do sucesso no SQLite, o próximo worker localiza o ticket pelo tracking ID e conclui o item. A garantia é limitada a esse protocolo: depende de todos os criadores concorrentes desse fluxo respeitarem o mesmo lock e da disponibilidade do lookup e do MariaDB.
 
 ## Datas e campos personalizados
 
@@ -253,12 +280,14 @@ Esta garantia está limitada à posse e às transições da `recurrence_executio
 
 ## Lote
 
-Uma recorrência com quantidade 10 gera 10 tickets independentes e 10 vínculos de rastreabilidade.
+Uma recorrência com quantidade 10 produz uma execution cujo `expected_count=10`. Esse snapshot é o tamanho imutável do lote, mesmo que `recurrence.quantity` mude depois. A materialização cria uma única linha para cada `item_index` de 1 a 10, protegida por `UNIQUE (execution_id, item_index)`.
+
+Cada item percorre `pending → creating → succeeded` ou `failed`. O tracking ID é persistido antes da chamada externa; `created_count` é sempre recalculado como a quantidade de itens `succeeded`. O estado final é `succeeded` quando N/N itens terminam, `failed` quando 0/N terminam e houve falha, ou `partial` quando apenas parte do lote termina. `failed` e `partial` continuam usando o retry explícito da SAFE-001.
 
 No futuro, cada item do lote poderá receber patrimônio próprio.
 
 ## Compatibilidade com atualizações do HESK
 
-A integração deve ficar isolada em `HeskBootstrap` e `HeskTicketCreator`.
+A integração fica isolada em `HeskBootstrap`, `HeskTicketCreator` e `HeskTicketGateway`.
 
 Quando o HESK for atualizado, a camada de integração poderá ser validada sem reescrever o scheduler ou o modelo de recorrência.

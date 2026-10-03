@@ -319,6 +319,65 @@ final class RecurrenceExecutionRepository
         return $statement->rowCount() === 1;
     }
 
+    public function ownsActiveLease(int $executionId, string $leaseToken, string $nowUtc): bool
+    {
+        $nowUtc = RecurrenceValidator::normalizeUtc($nowUtc, 'nowUtc');
+        $statement = $this->connection->prepare(
+            "SELECT 1 FROM recurrence_executions
+             WHERE id = :id
+               AND status = 'running'
+               AND lease_token = :lease_token
+               AND lease_expires_at IS NOT NULL
+               AND lease_expires_at > :now_utc
+             LIMIT 1"
+        );
+        $statement->execute([
+            'id' => $executionId,
+            'lease_token' => $leaseToken,
+            'now_utc' => $nowUtc,
+        ]);
+
+        return $statement->fetchColumn() !== false;
+    }
+
+    public function syncCreatedCount(
+        int $executionId,
+        string $leaseToken,
+        string $nowUtc,
+    ): ?int {
+        $nowUtc = RecurrenceValidator::normalizeUtc($nowUtc, 'nowUtc');
+        $statement = $this->connection->prepare(
+            "UPDATE recurrence_executions
+             SET created_count = (
+                    SELECT COUNT(*) FROM recurrence_execution_items
+                    WHERE execution_id = :id AND status = 'succeeded'
+                 ),
+                 updated_at = :now_utc
+             WHERE id = :id
+               AND status = 'running'
+               AND lease_token = :lease_token
+               AND lease_expires_at IS NOT NULL
+               AND lease_expires_at > :now_utc
+               AND (
+                    SELECT COUNT(*) FROM recurrence_execution_items
+                    WHERE execution_id = :id AND status = 'succeeded'
+               ) <= expected_count"
+        );
+        $statement->execute([
+            'id' => $executionId,
+            'now_utc' => $nowUtc,
+            'lease_token' => $leaseToken,
+        ]);
+
+        if ($statement->rowCount() !== 1) {
+            return null;
+        }
+
+        $execution = $this->findById($executionId);
+
+        return $execution === null ? null : (int) $execution['created_count'];
+    }
+
     /**
      * @param array<string, mixed> $data
      * @return array<string, int|string|null>

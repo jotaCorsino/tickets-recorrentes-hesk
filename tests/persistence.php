@@ -85,7 +85,7 @@ try {
 
     $migrations = new MigrationRunner($connection, dirname(__DIR__) . '/database/migrations');
     $assertSame(
-        ['001_initial_schema', '002_execution_leases'],
+        ['001_initial_schema', '002_execution_leases', '003_execution_items'],
         $migrations->migrate(),
         'A primeira execução deve aplicar as migrations disponíveis'
     );
@@ -93,20 +93,22 @@ try {
     $migrations->assertUpToDate();
 
     $assertSame(
-        2,
+        3,
         (int) $connection->query('SELECT COUNT(*) FROM schema_migrations')->fetchColumn(),
         'As migrations devem ser registradas uma única vez cada'
     );
 
     $tables = $connection->query(
         "SELECT name FROM sqlite_master
-         WHERE type = 'table' AND name IN ('recurrences', 'recurrence_executions')
+         WHERE type = 'table' AND name IN (
+            'recurrences', 'recurrence_executions', 'recurrence_execution_items'
+         )
          ORDER BY name"
     )->fetchAll(PDO::FETCH_COLUMN);
     $assertSame(
-        ['recurrence_executions', 'recurrences'],
+        ['recurrence_execution_items', 'recurrence_executions', 'recurrences'],
         $tables,
-        'As duas tabelas de domínio devem existir'
+        'As três tabelas de domínio devem existir'
     );
 
     $definition = [

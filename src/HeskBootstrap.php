@@ -99,6 +99,10 @@ final class HeskBootstrap
                 'hesk_get_selectable_customer_by_id',
                 'hesk_is_valid_priority_id',
                 'hesk_is_custom_field_in_category',
+                'hesk_dbEscape',
+                'hesk_dbQuery',
+                'hesk_dbFetchAssoc',
+                'hesk_dbNumRows',
             ] as $requiredFunction
         ) {
             if (!function_exists($requiredFunction)) {
