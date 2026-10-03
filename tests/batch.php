@@ -211,6 +211,17 @@ $assertThrows = static function (
     }
 };
 
+// Os hashes homologados foram calculados com CRLF; aceite também checkouts LF.
+$migrationHash = static function (string $path): string {
+    $contents = file_get_contents($path);
+
+    if ($contents === false) {
+        throw new RuntimeException("Não foi possível ler a migration: {$path}");
+    }
+
+    return hash('sha256', str_replace("\n", "\r\n", str_replace("\r\n", "\n", $contents)));
+};
+
 $temporaryDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR
     . 'tickets-recorrentes-batch-' . bin2hex(random_bytes(8));
 $databasePath = $temporaryDirectory . DIRECTORY_SEPARATOR . 'batch.sqlite';
@@ -237,13 +248,13 @@ try {
     $assertSame(3, (int) $connection->query('SELECT COUNT(*) FROM schema_migrations')->fetchColumn(), 'As três migrations devem estar registradas');
     $assertSame(
         '387b3354b3cc5644f45028c9c6e172813f511e010935d7fa7c2fc455c98c524e',
-        hash_file('sha256', dirname(__DIR__) . '/database/migrations/001_initial_schema.sql'),
-        'A migration 001 deve permanecer byte a byte inalterada'
+        $migrationHash(dirname(__DIR__) . '/database/migrations/001_initial_schema.sql'),
+        'A migration 001 deve permanecer inalterada, exceto por LF/CRLF'
     );
     $assertSame(
         '9f6494f76fb26b81bffc5c55aa79fc096f0c83e2eb8890dc82e062815d5e8498',
-        hash_file('sha256', dirname(__DIR__) . '/database/migrations/002_execution_leases.sql'),
-        'A migration 002 deve permanecer byte a byte inalterada'
+        $migrationHash(dirname(__DIR__) . '/database/migrations/002_execution_leases.sql'),
+        'A migration 002 deve permanecer inalterada, exceto por LF/CRLF'
     );
 
     $columns = $connection->query('PRAGMA table_info(recurrence_execution_items)')->fetchAll(PDO::FETCH_ASSOC);
