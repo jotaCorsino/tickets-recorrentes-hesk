@@ -286,7 +286,7 @@ O stale takeover por expiração do lease não foi reproduzido manualmente nesta
 
 A recorrência ID `1` foi deixada com `enabled=false`. `safe-homolog.sqlite` e os auxiliares `-wal` e `-shm` foram removidos; depois da limpeza, `storage` continha somente `app.sqlite`. As variáveis temporárias de token, claim e caminho do banco foram removidas da sessão.
 
-Com esses resultados, SAFE-001 está concluída. A BATCH-001 foi implementada posteriormente e está `AGUARDANDO_HOMOLOGACAO`; isso não altera os resultados históricos desta homologação.
+Com esses resultados, SAFE-001 está concluída. A BATCH-001 foi implementada e homologada posteriormente e está `CONCLUÍDO`; isso não altera os resultados históricos desta homologação.
 
 ## Testes locais
 

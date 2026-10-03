@@ -243,6 +243,5 @@
 ## Pontos ainda pendentes
 
 - modelo real completo das manutenções preventivas;
-- homologação real da BATCH-001 no cPanel;
 - patrimônio e conteúdo individual por item do lote;
 - procedimento administrativo para resolver executions legadas `running` sem lease.

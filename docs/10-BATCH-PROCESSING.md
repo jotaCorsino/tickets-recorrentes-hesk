@@ -1,6 +1,6 @@
 # 10 — Processamento de lotes e reconciliação HESK
 
-**Status da BATCH-001:** `AGUARDANDO_HOMOLOGACAO`
+**Status da BATCH-001:** `CONCLUÍDO`
 
 ## Objetivo
 
@@ -301,8 +301,95 @@ unset APP_DB BATCH_DB HESK_ROOT APP_SHA_BEFORE APP_SHA_AFTER
 
 Confirme a recorrência desabilitada antes da limpeza, a remoção exclusiva do banco isolado e auxiliares, e o hash inalterado de `app.sqlite`. Os dois tickets de homologação ficam no HESK para auditoria manual.
 
+## Resultado da homologação real
+
+A BATCH-001 foi homologada com sucesso no servidor real em 02/10/2026. O teste usou somente:
+
+```text
+/home/tech2612/hesk-recorrencias/storage/batch-homolog.sqlite
+```
+
+O banco real permaneceu em:
+
+```text
+/home/tech2612/hesk-recorrencias/storage/app.sqlite
+```
+
+Seu SHA-256 foi idêntico antes e depois da homologação:
+
+```text
+732d714ed1aacaa4ac7849bb324817f7f07dd8bcac22ab96126106eee9da9082
+```
+
+### Migrations e schema
+
+Na primeira execução de `migrate` em banco novo, a CLI exibiu `Migrations aplicadas: nenhuma`, saída incompatível com o estado posteriormente inspecionado. Não foi determinada uma causa para essa divergência.
+
+A inspeção direta de `schema_migrations` confirmou:
+
+- `001_initial_schema`;
+- `002_execution_leases`;
+- `003_execution_items`.
+
+As três registraram `applied_at=2026-10-02T18:41:05Z`. Também foram encontradas `recurrence_execution_items`, `recurrence_executions`, `recurrences`, `schema_migrations` e `sqlite_sequence`, com `foreign_keys=1` e `journal_mode=wal`. A segunda execução de `migrate` retornou corretamente `Migrations aplicadas: nenhuma`, confirmando a idempotência.
+
+### Recorrência, scheduler e check
+
+A recorrência ID `1`, denominada `Homologação BATCH-001 - WORKSTATION`, foi criada com timezone `America/Sao_Paulo`, intervalo de um ano, `next_run_at=2026-10-01T12:00:00Z`, `quantity=2`, `customer_id=21`, `category_id=5`, prioridade `Baixa`, `status_id=0`, `owner_id=4`, `openedby_id=4` e `notify_customer=false`.
+
+O scheduler processou uma recorrência, sem ignoradas ou erros. Criou a execution ID `1` para `scheduled_for=2026-10-01T12:00:00Z` e avançou `next_run_at` para `2027-10-01T12:00:00Z`. Inicialmente, a execution estava `pending`, com `expected_count=2`, `created_count=0`, `attempt_count=0`, sem lease, erro ou timestamps de tentativa.
+
+O worker check retornou `BATCH CHECK OK`, informou dois itens esperados e zero existentes. Foi confirmado que não houve claim, materialização ou criação de ticket; `execution.php items` retornou `[]`.
+
+### Run real e itens
+
+O worker retornou:
+
+```text
+BATCH RUN OK
+Execution: 1
+Expected: 2
+Succeeded: 2
+Failed: 0
+Reconciled: 0
+Created now: 2
+Final status: succeeded
+```
+
+Itens confirmados:
+
+| Item | Status | Ticket HESK | Tracking ID | Tentativas | Erro |
+|---:|---|---:|---|---:|---|
+| 1 | `succeeded` | `44` | `XNP-1EU-SDY4` | 1 | nulo |
+| 2 | `succeeded` | `45` | `S8J-V7T-N6QP` | 1 | nulo |
+
+A execution terminou `succeeded`, com `expected_count=2`, `created_count=2`, `attempt_count=1`, `error_message=null`, `lease_owner=null` e `lease_expires_at=null`.
+
+### Conferência visual no HESK
+
+Os tickets `44` e `45` foram conferidos manualmente e apresentaram solicitante `Automação Technolife`, categoria `WORKSTATION`, prioridade `Baixa`, status `Novo`, responsável `João Paulo Corsino`, atendimento `Presencial`, subcategoria `WINDOWS`, problema/requisição `REQ_Manutenção preventiva`, cliente `TECHNOLIFE`, patrimônio vazio, assunto e mensagem de homologação e vencimento `Nenhuma`.
+
+As telas enviadas não comprovaram a ausência de envio de notificação. O que foi confirmado é que a recorrência estava configurada com `notify_customer=false` e que o fluxo BATCH homologado não introduz rotina de notificação ao solicitante.
+
+### Reexecução e limite da reconciliação homologada
+
+A reexecução da mesma execution retornou:
+
+```text
+BATCH RUN NAO INICIADO
+Motivo: terminal_succeeded
+```
+
+Depois da recusa, a execution continuou `succeeded`, as contagens permaneceram `2/2`, `attempt_count` continuou `1`, e os mesmos itens, tracking IDs, IDs de ticket e contadores de tentativa foram preservados. Isso confirmou no servidor que o lote concluído não foi recriado.
+
+O crash real entre `hesk_newTicket()` e a persistência do sucesso no SQLite não foi provocado manualmente. Portanto, não se declara homologação manual desse cenário. Identidade por item, tracking IDs persistidos, criação dos dois tickets e reexecução terminal foram homologados; lookup, reconciliação, crash recovery e named lock permanecem parte da implementação e cobertos pelos testes automatizados, sem teste destrutivo no HESK.
+
+### Encerramento
+
+A recorrência ID `1` foi deixada com `enabled=false` e `next_run_at=2027-10-01T12:00:00Z`. `batch-homolog.sqlite` e eventuais arquivos `-wal` e `-shm` foram removidos. Depois da limpeza, `storage` continha somente `app.sqlite`, cujo hash permaneceu byte a byte idêntico ao inicial.
+
 ## Critério de saída
 
 Uma execution materializa N itens persistentes; cada item possui identidade HESK rastreável, retries não recriam itens `succeeded` e tickets existentes são reconciliados pelo tracking ID.
 
-A BATCH-001 só poderá ser marcada `CONCLUÍDO` depois da homologação acima. UI-001 e DEP-001 não foram iniciadas.
+A homologação confirmou o critério de saída e a BATCH-001 está `CONCLUÍDO`. UI-001 e DEP-001 continuam `PENDENTE` e não foram iniciadas.

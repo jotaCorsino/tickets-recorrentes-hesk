@@ -11,7 +11,7 @@
 | CFG-001 | Persistência | Modelar recorrências e execuções | CONCLUÍDO | Estrutura persistente versionada |
 | SCH-001 | Scheduler | Detectar recorrências vencidas | CONCLUÍDO | Execução por Cron reprodutível |
 | SAFE-001 | Idempotência de execution | Proteger claim, lease e retry da mesma execution | CONCLUÍDO | Uma execution não é processada simultaneamente por dois workers; stale lease e retry preservam a mesma identidade |
-| BATCH-001 | Lotes | Gerar múltiplos tickets independentes | AGUARDANDO_HOMOLOGACAO | Uma execution materializa N itens persistentes; cada item possui identidade HESK rastreável, retries não recriam itens succeeded e tickets existentes são reconciliados pelo tracking ID |
+| BATCH-001 | Lotes | Gerar múltiplos tickets independentes | CONCLUÍDO | Uma execution materializa N itens persistentes; cada item possui identidade HESK rastreável, retries não recriam itens succeeded e tickets existentes são reconciliados pelo tracking ID |
 | UI-001 | Painel | Editar recorrências sem alterar código | PENDENTE | CRUD funcional e simples |
 | DEP-001 | cPanel | Implantar no ambiente real | PENDENTE | Deploy e Cron documentados |
 | OPS-001 | Operação | Criar manual técnico | PENDENTE | Instalação, uso, logs, falhas e recuperação documentados |
@@ -99,10 +99,20 @@ A recorrência foi desabilitada e o banco isolado, WAL e SHM foram removidos. O 
 
 SAFE-001 está `CONCLUÍDO`. Sua posse por lease permanece a base usada pelo worker de lotes.
 
-## BATCH-001 aguardando homologação
+## BATCH-001 homologada
 
-A implementação local da BATCH-001 está pronta e testada. A migration `003_execution_items` adiciona uma identidade persistente por ticket, com `item_index`, estado, tracking ID, ID do ticket HESK e dados de tentativa. O lote usa o `expected_count` capturado na execution, não a quantidade atual da recorrência.
+Em 02/10/2026, a geração em lote foi homologada no servidor real usando exclusivamente:
 
-O worker prepara e persiste o tracking ID antes de acessar a criação externa, consulta o HESK para reconciliar tickets já existentes e chama `hesk_newTicket()` somente quando necessário. A consulta/criação é serializada por um named lock MariaDB derivado do tracking ID. Itens `succeeded` são preservados; retries reutilizam execution, item e tracking ID. `created_count` é derivado da quantidade de itens concluídos.
+```text
+/home/tech2612/hesk-recorrencias/storage/batch-homolog.sqlite
+```
 
-Os testes locais cobrem sucesso, falha total, lote parcial, retry, crash entre HESK e SQLite, reconciliação, stale takeover e perda de lease. A etapa permanece `AGUARDANDO_HOMOLOGACAO`: ainda é necessário executar o roteiro controlado de `docs/10-BATCH-PROCESSING.md` no cPanel e conferir manualmente os dois tickets reais. UI-001 e DEP-001 não foram iniciadas.
+O primeiro `migrate` exibiu de forma inconsistente `Migrations aplicadas: nenhuma`. Sem atribuir causa a essa divergência, a inspeção direta de `schema_migrations` confirmou `001_initial_schema`, `002_execution_leases` e `003_execution_items`, todas com `applied_at=2026-10-02T18:41:05Z`; o schema continha as tabelas esperadas, com `foreign_keys=1` e `journal_mode=wal`. A segunda execução informou corretamente que não havia migrations pendentes.
+
+A recorrência ID `1`, com `quantity=2` e `notify_customer=false`, originou a execution ID `1` para `2026-10-01T12:00:00Z` e avançou `next_run_at` para `2027-10-01T12:00:00Z`. O check permaneceu somente leitura: não fez claim, não materializou itens e não criou tickets.
+
+O run real criou os tickets HESK `44` (`XNP-1EU-SDY4`) e `45` (`S8J-V7T-N6QP`). Os dois itens terminaram `succeeded`, com uma tentativa cada; a execution terminou `succeeded`, com `expected_count=2`, `created_count=2`, `attempt_count=1`, erro e lease nulos. A conferência visual validou solicitante, categoria, prioridade, status, responsável, campos personalizados, assunto, mensagem, patrimônio vazio e ausência de vencimento. As telas não comprovaram ausência de envio de notificação; o fluxo homologado estava configurado com `notify_customer=false` e a BATCH-001 não introduz rotina de notificação.
+
+A reexecução foi recusada como `terminal_succeeded` e preservou execution, itens, tracking IDs, IDs dos tickets e contadores, confirmando que o lote concluído não foi recriado. O crash exato entre `hesk_newTicket()` e o sucesso no SQLite não foi provocado manualmente; lookup, reconciliação, crash recovery e named lock permanecem cobertos pelos testes automatizados.
+
+A recorrência foi desabilitada, o banco isolado e seus auxiliares foram removidos, e `storage` voltou a conter somente `app.sqlite`. O hash do banco real permaneceu `732d714ed1aacaa4ac7849bb324817f7f07dd8bcac22ab96126106eee9da9082` antes e depois. BATCH-001 está `CONCLUÍDO`; UI-001 e DEP-001 continuam `PENDENTE` e não foram iniciadas.
