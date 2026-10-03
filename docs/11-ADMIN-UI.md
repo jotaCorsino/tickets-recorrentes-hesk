@@ -8,6 +8,12 @@ UI-001A entrega uma prévia navegável para avaliação visual antes de conectar
 
 O painel usa PHP 8.2, HTML5, CSS3 e JavaScript vanilla. Não há dependência de Node.js, framework web ou compilação de assets em produção.
 
+## Processo visual obrigatório
+
+Tarefas de frontend/UI da UI-001 devem utilizar a skill de construção de sites do ChatGPT/Codex para criação e refinamento visual. A interface deve ser examinada em prévia desktop e mobile e apresentada para avaliação visual do usuário antes da integração de funcionalidades definitivas. Esta regra se aplica a UI-001A, UI-001B, UI-001C, UI-001D, UI-001E e UI-001F sempre que houver alteração visual.
+
+Nesta revisão da UI-001A foi utilizada a skill `sites:sites` em modo local, sobre o checkout PHP existente. A avaliação visual da prévia identificou colunas e ações ocultas nas tabelas em telas estreitas; o refinamento organiza essas linhas como cartões responsivos e reduz a altura do destaque inicial para priorizar os indicadores. A prévia continuará local e vinculada ao PR #7 para avaliação antes da UI-001B.
+
 ## Estrutura
 
 ```text
@@ -43,7 +49,7 @@ Rota ou modo desconhecido retorna 404. Método diferente de GET retorna 405 enqu
 
 ## Design e acessibilidade
 
-No desktop, a navegação usa sidebar à esquerda e área principal à direita. Abaixo de 760 px, a sidebar vira um menu recolhível com botão, overlay, `aria-expanded`, fechamento por Escape e foco inicial no primeiro link. Tabelas largas têm rolagem horizontal em telas menores.
+No desktop, a navegação usa sidebar à esquerda e área principal à direita. Abaixo de 760 px, a sidebar vira um menu recolhível com botão, overlay, `aria-expanded`, fechamento por Escape e foco inicial no primeiro link. As tabelas mantêm colunas no desktop e passam a cartões com rótulos, status e ações visíveis no mobile. O destaque inicial foi reduzido para dar prioridade aos indicadores. O formulário possui links diretos para suas seis seções.
 
 O painel usa HTML semântico, labels ligados aos controles, link para pular ao conteúdo, foco visível, contraste e redução de animação conforme a preferência do dispositivo. A identidade visual é própria e neutra, sem copiar o HESK.
 

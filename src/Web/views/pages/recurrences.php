@@ -13,7 +13,7 @@
         <span class="count-pill"><?= $escape(count($recurrences)) ?> exemplos</span>
     </div>
     <div class="table-scroll">
-        <table>
+        <table class="responsive-table recurrence-table">
             <thead>
                 <tr>
                     <th scope="col">Nome</th><th scope="col">Status</th><th scope="col">Frequência</th>
@@ -24,14 +24,14 @@
             <tbody>
             <?php foreach ($recurrences as $recurrence): ?>
                 <tr>
-                    <td><strong class="table-primary"><?= $escape($recurrence['name']) ?></strong><span class="table-secondary">Exemplo visual</span></td>
-                    <td><span class="badge <?= $recurrence['status'] === 'Ativa' ? 'badge--active' : 'badge--inactive' ?>"><?= $escape($recurrence['status']) ?></span></td>
-                    <td><?= $escape($recurrence['frequency']) ?></td>
-                    <td><?= $escape($recurrence['next']) ?></td>
-                    <td><?= $escape($recurrence['quantity']) ?></td>
-                    <td><?= $escape($recurrence['customer']) ?></td>
-                    <td><?= $escape($recurrence['owner']) ?></td>
-                    <td>
+                    <td data-label="Nome"><strong class="table-primary"><?= $escape($recurrence['name']) ?></strong><span class="table-secondary">Exemplo visual</span></td>
+                    <td data-label="Status"><span class="badge <?= $recurrence['status'] === 'Ativa' ? 'badge--active' : 'badge--inactive' ?>"><?= $escape($recurrence['status']) ?></span></td>
+                    <td data-label="Frequência"><?= $escape($recurrence['frequency']) ?></td>
+                    <td data-label="Próxima execução"><?= $escape($recurrence['next']) ?></td>
+                    <td data-label="Quantidade"><?= $escape($recurrence['quantity']) ?></td>
+                    <td data-label="Cliente"><?= $escape($recurrence['customer']) ?></td>
+                    <td data-label="Responsável"><?= $escape($recurrence['owner']) ?></td>
+                    <td data-label="Ações">
                         <div class="row-actions">
                             <a href="index.php?page=recurrence-form&amp;mode=view">Visualizar</a>
                             <a href="index.php?page=recurrence-form&amp;mode=edit">Editar</a>

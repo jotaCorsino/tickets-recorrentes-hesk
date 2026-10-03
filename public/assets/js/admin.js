@@ -17,7 +17,9 @@
         toggle.setAttribute('aria-expanded', 'true');
         toggle.setAttribute('aria-label', 'Fechar menu');
         backdrop.hidden = false;
-        sidebar.querySelector('a')?.focus();
+        setTimeout(() => {
+            if (document.body.classList.contains('menu-open')) sidebar.querySelector('a')?.focus();
+        }, 230);
     };
 
     toggle.addEventListener('click', () => {

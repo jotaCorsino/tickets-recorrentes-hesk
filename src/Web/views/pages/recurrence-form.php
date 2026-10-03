@@ -17,6 +17,15 @@ $customFields = [
     <span class="preview-label"><?= $isView ? 'Somente visualização' : 'Sem gravação nesta etapa' ?></span>
 </div>
 
+<nav class="form-jump" aria-label="Seções do formulário">
+    <a href="#identification-title">Identificação</a>
+    <a href="#schedule-title">Agendamento</a>
+    <a href="#ticket-title">Tickets</a>
+    <a href="#content-title">Conteúdo</a>
+    <a href="#custom-title">Campos personalizados</a>
+    <a href="#notification-title">Notificação</a>
+</nav>
+
 <form class="form-layout" action="index.php?page=recurrence-form" method="post" novalidate>
     <?php if ($isView): ?><fieldset class="form-readonly" disabled><legend class="visually-hidden">Dados demonstrativos da recorrência</legend><?php endif; ?>
     <section class="form-section" aria-labelledby="identification-title">

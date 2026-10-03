@@ -27,22 +27,22 @@
     <div class="metric-grid">
         <article class="metric-card metric-card--green">
             <div class="metric-card__top"><span>Recorrências ativas</span><span class="metric-card__symbol" aria-hidden="true">↗</span></div>
-            <strong><?= $escape(str_pad((string) $summary['active'], 2, '0', STR_PAD_LEFT)) ?></strong>
+            <strong><?= $escape($summary['active']) ?></strong>
             <p>Agendas prontas para próximas competências</p>
         </article>
         <article class="metric-card metric-card--slate">
             <div class="metric-card__top"><span>Recorrências inativas</span><span class="metric-card__symbol" aria-hidden="true">—</span></div>
-            <strong><?= $escape(str_pad((string) $summary['inactive'], 2, '0', STR_PAD_LEFT)) ?></strong>
+            <strong><?= $escape($summary['inactive']) ?></strong>
             <p>Configurações preservadas sem novos agendamentos</p>
         </article>
         <article class="metric-card metric-card--blue">
             <div class="metric-card__top"><span>Execuções pendentes</span><span class="metric-card__symbol" aria-hidden="true">◷</span></div>
-            <strong><?= $escape(str_pad((string) $summary['pending'], 2, '0', STR_PAD_LEFT)) ?></strong>
+            <strong><?= $escape($summary['pending']) ?></strong>
             <p>Competências aguardando processamento</p>
         </article>
         <article class="metric-card metric-card--red">
             <div class="metric-card__top"><span>Execuções com falha</span><span class="metric-card__symbol" aria-hidden="true">!</span></div>
-            <strong><?= $escape(str_pad((string) $summary['failed'], 2, '0', STR_PAD_LEFT)) ?></strong>
+            <strong><?= $escape($summary['failed']) ?></strong>
             <p>Itens que exigirão revisão antes do retry</p>
         </article>
     </div>
@@ -54,16 +54,16 @@
         <a class="text-link" href="index.php?page=recurrences">Ver todas <span aria-hidden="true">↗</span></a>
     </div>
     <div class="table-scroll">
-        <table>
+        <table class="responsive-table overview-table">
             <thead><tr><th scope="col">Nome</th><th scope="col">Próxima execução</th><th scope="col">Frequência</th><th scope="col">Quantidade</th><th scope="col">Status</th></tr></thead>
             <tbody>
             <?php foreach ($recurrences as $recurrence): ?>
                 <tr>
-                    <td><strong class="table-primary"><?= $escape($recurrence['name']) ?></strong></td>
-                    <td><?= $escape($recurrence['next']) ?></td>
-                    <td><?= $escape($recurrence['frequency']) ?></td>
-                    <td><?= $escape($recurrence['quantity']) ?></td>
-                    <td><span class="badge <?= $recurrence['status'] === 'Ativa' ? 'badge--active' : 'badge--inactive' ?>"><?= $escape($recurrence['status']) ?></span></td>
+                    <td data-label="Nome"><strong class="table-primary"><?= $escape($recurrence['name']) ?></strong></td>
+                    <td data-label="Próxima execução"><?= $escape($recurrence['next']) ?></td>
+                    <td data-label="Frequência"><?= $escape($recurrence['frequency']) ?></td>
+                    <td data-label="Quantidade"><?= $escape($recurrence['quantity']) ?></td>
+                    <td data-label="Status"><span class="badge <?= $recurrence['status'] === 'Ativa' ? 'badge--active' : 'badge--inactive' ?>"><?= $escape($recurrence['status']) ?></span></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
