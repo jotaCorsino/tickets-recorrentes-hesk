@@ -7,35 +7,29 @@ namespace TicketsRecorrentesHesk\Web;
 final class AdminUi
 {
     private const ROUTES = [
-        'overview' => [
-            'view' => 'overview.php',
-            'nav' => 'overview',
-            'heading' => 'Visão geral',
-            'intro' => 'Um ponto de partida para acompanhar agendas e execuções.',
-        ],
         'recurrences' => [
             'view' => 'recurrences.php',
             'nav' => 'recurrences',
             'heading' => 'Recorrências',
-            'intro' => 'Organize o que deve ser criado e quando cada agenda será executada.',
+            'intro' => 'Modelos de tickets programados.',
         ],
         'recurrence-form' => [
             'view' => 'recurrence-form.php',
             'nav' => 'recurrences',
             'heading' => 'Nova recorrência',
-            'intro' => 'Estrutura visual do cadastro. O salvamento chegará na próxima etapa.',
+            'intro' => 'Campos do modelo, sem salvamento nesta prévia.',
         ],
         'executions' => [
             'view' => 'executions.php',
             'nav' => 'executions',
             'heading' => 'Execuções',
-            'intro' => 'Acompanhe competências, tentativas e resultados de cada lote.',
+            'intro' => 'Acompanhe os lotes processados.',
         ],
         'system' => [
             'view' => 'system.php',
             'nav' => 'system',
             'heading' => 'Sistema',
-            'intro' => 'Informações seguras da prévia administrativa.',
+            'intro' => 'Informações da prévia.',
         ],
     ];
 
@@ -44,7 +38,7 @@ final class AdminUi
     }
 
     /** @return array{status: int, content_type: string, body: string} */
-    public function respond(string $page, string $mode = 'new', string $method = 'GET'): array
+    public function respond(string $page, string $mode = 'new', string $method = 'GET', ?string $exampleId = null): array
     {
         if (!$this->enabled) {
             return $this->unavailable();
@@ -56,6 +50,11 @@ final class AdminUi
                 'content_type' => 'text/plain; charset=UTF-8',
                 'body' => 'A gravação ainda não está disponível.',
             ];
+        }
+
+        // Preserve old preview links while keeping recurrences as the only landing page.
+        if ($page === 'overview') {
+            $page = 'recurrences';
         }
 
         $route = self::ROUTES[$page] ?? null;
@@ -78,7 +77,22 @@ final class AdminUi
         $view = __DIR__ . '/views/pages/' . $route['view'];
         $recurrences = DemoData::recurrences();
         $executions = DemoData::executions();
-        $summary = DemoData::summary();
+        $example = null;
+
+        if ($page === 'recurrence-form' && $mode !== 'new') {
+            $exampleId ??= '1';
+
+            foreach ($recurrences as $recurrence) {
+                if ($exampleId === (string) $recurrence['id']) {
+                    $example = $recurrence;
+                    break;
+                }
+            }
+
+            if ($example === null) {
+                return $this->unavailable();
+            }
+        }
         $escape = static fn (string|int $value): string => htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
         ob_start();

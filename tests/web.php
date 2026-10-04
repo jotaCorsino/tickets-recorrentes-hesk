@@ -14,7 +14,7 @@ $assert = static function (bool $condition, string $message) use (&$failures, &$
 };
 
 /** @return array{status: int, body: string} */
-$request = static function (?string $page, ?string $mode = null, ?string $enabled = '1', string $method = 'GET'): array {
+$request = static function (?string $page, ?string $mode = null, ?string $enabled = '1', string $method = 'GET', ?string $exampleId = null): array {
     if ($enabled === null) {
         putenv('ADMIN_UI_ENABLED');
     } else {
@@ -29,6 +29,10 @@ $request = static function (?string $page, ?string $mode = null, ?string $enable
 
     if ($mode !== null) {
         $_GET['mode'] = $mode;
+    }
+
+    if ($exampleId !== null) {
+        $_GET['id'] = $exampleId;
     }
 
     $_SERVER['REQUEST_METHOD'] = $method;
@@ -87,7 +91,6 @@ $disabled = $request('overview', enabled: '0');
 $assert($disabled['status'] === 404, 'ADMIN_UI_ENABLED=0 deve manter o bloqueio');
 
 $routes = [
-    'overview' => 'Visão geral',
     'recurrences' => 'Recorrências',
     'executions' => 'Execuções',
     'system' => 'Sistema',
@@ -97,18 +100,22 @@ foreach ($routes as $route => $heading) {
     $response = $request($route);
     $assert($response['status'] === 200, "Rota {$route} deve responder 200");
     $assert(str_contains($response['body'], '<h1>' . $heading . '</h1>'), "Rota {$route} deve mostrar o título correto");
-    $assert(str_contains($response['body'], 'Dados demonstrativos nesta etapa'), "Rota {$route} deve identificar dados de prévia");
+    $assert(str_contains($response['body'], 'Dados de exemplo'), "Rota {$route} deve identificar dados de prévia");
     $assertStructure($response['body'], $route);
     $assert(!str_contains($response['body'], 'hesk_settings.inc.php') && !str_contains($response['body'], '/home/tech2612/') && !str_contains($response['body'], 'DB_PASSWORD'), "Rota {$route} não deve exibir segredos ou caminhos privados");
 }
 
 $home = $request(null);
-$assert($home['status'] === 200 && str_contains($home['body'], '<h1>Visão geral</h1>'), 'Rota inicial deve abrir a visão geral');
-$assert(str_contains($home['body'], 'Recorrências ativas') && str_contains($home['body'], 'Próximas recorrências'), 'Dashboard deve conter cards e agenda');
+$assert($home['status'] === 200 && str_contains($home['body'], '<h1>Recorrências</h1>'), 'Rota inicial deve abrir as recorrências');
+$assert(!str_contains($home['body'], 'page=overview'), 'Navegação não deve repetir a listagem na visão geral');
+$legacyOverview = $request('overview');
+$assert($legacyOverview['status'] === 200 && str_contains($legacyOverview['body'], '<h1>Recorrências</h1>'), 'Link antigo da visão geral deve mostrar a listagem');
 
 $list = $request('recurrences');
 $assert(str_contains($list['body'], 'Nova recorrência'), 'Listagem deve oferecer nova recorrência');
 $assert(str_contains($list['body'], 'mode=view') && str_contains($list['body'], 'mode=edit'), 'Ações visuais devem navegar para visualização e edição');
+$assert(substr_count($list['body'], '>Editar</a>') === 3, 'Cada modelo deve oferecer edição direta');
+$assert(str_contains($list['body'], 'mode=edit&amp;id=1') && str_contains($list['body'], 'mode=edit&amp;id=2') && str_contains($list['body'], 'mode=edit&amp;id=3'), 'A edição deve identificar o modelo selecionado');
 
 foreach (['new', 'view', 'edit'] as $mode) {
     $form = $request('recurrence-form', $mode);
@@ -120,6 +127,12 @@ foreach (['new', 'view', 'edit'] as $mode) {
         $assert(str_contains($form['body'], 'name="custom_fields[' . $field . ']"'), "Formulário {$mode} deve representar {$field}");
     }
 }
+
+$secondExample = $request('recurrence-form', 'edit', exampleId: '2');
+$assert(str_contains($secondExample['body'], 'value="Revisão de servidores"'), 'Edição deve mostrar o nome do modelo selecionado');
+$assert(str_contains($secondExample['body'], '<option value="3" selected>SERVER</option>'), 'Edição deve mostrar a categoria do modelo selecionado');
+$missingExample = $request('recurrence-form', 'edit', exampleId: '999');
+$assert($missingExample['status'] === 404, 'Modelo demonstrativo desconhecido deve retornar 404');
 
 $executions = $request('executions');
 foreach (['pending', 'running', 'succeeded', 'failed', 'partial'] as $status) {

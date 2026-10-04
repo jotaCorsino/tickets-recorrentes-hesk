@@ -6,47 +6,54 @@ namespace TicketsRecorrentesHesk\Web;
 
 final class DemoData
 {
-    /** @return array<string, int> */
-    public static function summary(): array
-    {
-        return [
-            'active' => 8,
-            'inactive' => 3,
-            'pending' => 2,
-            'failed' => 1,
-        ];
-    }
-
     /** @return list<array<string, int|string>> */
     public static function recurrences(): array
     {
         return [
             [
+                'id' => 1,
                 'name' => 'Preventiva de estações',
                 'status' => 'Ativa',
                 'frequency' => 'A cada 3 meses',
                 'next' => '15 out 2026 · 09:00',
                 'quantity' => 10,
-                'customer' => 'Empresa exemplo',
-                'owner' => 'Equipe técnica',
+                'category_id' => 5,
+                'owner_id' => 4,
+                'interval_value' => 3,
+                'interval_unit' => 'month',
+                'next_local' => '2026-10-15T09:00',
+                'subject' => 'Manutenção preventiva',
+                'message' => 'Realizar a manutenção preventiva conforme o planejamento.',
             ],
             [
+                'id' => 2,
                 'name' => 'Revisão de servidores',
                 'status' => 'Ativa',
                 'frequency' => 'A cada 1 mês',
                 'next' => '30 out 2026 · 08:30',
                 'quantity' => 2,
-                'customer' => 'Cliente demonstrativo',
-                'owner' => 'Responsável exemplo',
+                'category_id' => 3,
+                'owner_id' => 3,
+                'interval_value' => 1,
+                'interval_unit' => 'month',
+                'next_local' => '2026-10-30T08:30',
+                'subject' => 'Revisão de servidores',
+                'message' => 'Verificar servidores conforme o planejamento.',
             ],
             [
+                'id' => 3,
                 'name' => 'Inventário de periféricos',
                 'status' => 'Inativa',
                 'frequency' => 'A cada 1 ano',
                 'next' => 'Pausada',
                 'quantity' => 4,
-                'customer' => 'Empresa exemplo',
-                'owner' => 'Equipe técnica',
+                'category_id' => 8,
+                'owner_id' => 4,
+                'interval_value' => 1,
+                'interval_unit' => 'year',
+                'next_local' => '',
+                'subject' => 'Inventário de periféricos',
+                'message' => 'Conferir os periféricos cadastrados.',
             ],
         ];
     }

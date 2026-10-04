@@ -3,10 +3,9 @@
 declare(strict_types=1);
 
 $navigation = [
-    ['key' => 'overview', 'label' => 'Visão geral', 'number' => '01'],
-    ['key' => 'recurrences', 'label' => 'Recorrências', 'number' => '02'],
-    ['key' => 'executions', 'label' => 'Execuções', 'number' => '03'],
-    ['key' => 'system', 'label' => 'Sistema', 'number' => '04'],
+    ['key' => 'recurrences', 'label' => 'Recorrências'],
+    ['key' => 'executions', 'label' => 'Execuções'],
+    ['key' => 'system', 'label' => 'Sistema'],
 ];
 ?>
 <!doctype html>
@@ -26,27 +25,18 @@ $navigation = [
         <aside class="sidebar" id="sidebar-nav" data-sidebar>
             <div class="sidebar__brand">
                 <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
-                <div>
-                    <strong>Tickets Recorrentes</strong>
-                    <span>Administração</span>
-                </div>
+                <div><strong>Tickets Recorrentes</strong><span>Administração</span></div>
             </div>
-            <div class="sidebar__section-label">ESPAÇO DE TRABALHO</div>
             <nav class="sidebar__nav" aria-label="Navegação principal">
                 <?php foreach ($navigation as $item): ?>
                     <a class="nav-link<?= $activeNav === $item['key'] ? ' nav-link--active' : '' ?>"
                        href="index.php?page=<?= $escape($item['key']) ?>"
                        <?= $activeNav === $item['key'] ? 'aria-current="page"' : '' ?>>
-                        <span class="nav-link__number" aria-hidden="true"><?= $escape($item['number']) ?></span>
-                        <span><?= $escape($item['label']) ?></span>
-                        <span class="nav-link__arrow" aria-hidden="true">↗</span>
+                        <?= $escape($item['label']) ?>
                     </a>
                 <?php endforeach; ?>
             </nav>
-            <div class="sidebar__footer">
-                <span class="sidebar__footer-dot" aria-hidden="true"></span>
-                <div><strong>UI-001A</strong><span>Prévia visual do painel</span></div>
-            </div>
+            <div class="sidebar__footer">UI-001A <span>Prévia visual</span></div>
         </aside>
 
         <div class="workspace">
@@ -55,30 +45,23 @@ $navigation = [
                     <button class="menu-toggle" type="button" data-menu-toggle aria-label="Abrir menu" aria-controls="sidebar-nav" aria-expanded="false">
                         <span></span><span></span><span></span>
                     </button>
-                    <div class="topbar__identity">
-                        <span>Tickets Recorrentes</span>
-                        <strong>Administração</strong>
-                    </div>
+                    <span class="topbar__title">Tickets Recorrentes</span>
                 </div>
-                <span class="environment-pill"><span aria-hidden="true"></span> Ambiente de prévia</span>
+                <span class="preview-badge">Dados de exemplo</span>
             </header>
 
             <main class="content" id="content">
                 <div class="page-heading">
                     <div>
-                        <p class="eyebrow">ADMINISTRAÇÃO <span aria-hidden="true">/</span> <?= $escape($heading) ?></p>
                         <h1><?= $escape($heading) ?></h1>
-                        <p class="page-heading__intro"><?= $escape($intro) ?></p>
+                        <p><?= $escape($intro) ?></p>
                     </div>
-                    <span class="preview-label">Prévia visual</span>
-                </div>
-                <div class="demo-notice" role="note">
-                    <span class="demo-notice__icon" aria-hidden="true">i</span>
-                    <span>Dados demonstrativos nesta etapa. Este painel ainda não consulta ou altera o banco de recorrências.</span>
+                    <?php if ($page === 'recurrences'): ?>
+                        <a class="button button--primary page-heading__action" href="index.php?page=recurrence-form">Nova recorrência</a>
+                    <?php endif; ?>
                 </div>
                 <?php require $view; ?>
             </main>
-            <footer class="workspace-footer">Tickets Recorrentes <span aria-hidden="true">·</span> Fundação visual UI-001A</footer>
         </div>
     </div>
 </body>

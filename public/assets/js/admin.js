@@ -43,7 +43,7 @@
         }
     });
 
-    window.matchMedia('(min-width: 761px)').addEventListener('change', (event) => {
+    window.matchMedia('(min-width: 881px)').addEventListener('change', (event) => {
         if (event.matches) closeMenu();
     });
 })();

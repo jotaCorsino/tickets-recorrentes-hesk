@@ -7,12 +7,14 @@ use TicketsRecorrentesHesk\Web\AdminUi;
 require_once dirname(__DIR__) . '/src/Web/AdminUi.php';
 require_once dirname(__DIR__) . '/src/Web/DemoData.php';
 
-$page = $_GET['page'] ?? 'overview';
+$page = $_GET['page'] ?? 'recurrences';
 $mode = $_GET['mode'] ?? 'new';
+$exampleId = $_GET['id'] ?? null;
 $response = (new AdminUi(getenv('ADMIN_UI_ENABLED') === '1'))->respond(
     is_string($page) ? $page : '',
     is_string($mode) ? $mode : '',
-    (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')
+    (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'),
+    is_string($exampleId) ? $exampleId : null
 );
 
 http_response_code($response['status']);

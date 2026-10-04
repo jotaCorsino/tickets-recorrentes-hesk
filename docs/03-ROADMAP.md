@@ -119,6 +119,6 @@ A recorrência foi desabilitada, o banco isolado e seus auxiliares foram removid
 
 ## UI-001A — fundação visual em andamento
 
-A primeira subtarefa da UI-001 disponibiliza uma prévia web navegável com visão geral, recorrências, formulário, execuções e sistema. A barreira `ADMIN_UI_ENABLED=1` permite avaliação local sem expor o painel por padrão. Os dados são demonstrativos e não há leitura ou gravação no SQLite/HESK. Ver `docs/11-ADMIN-UI.md`.
+A primeira subtarefa da UI-001 disponibiliza uma prévia web navegável com Recorrências como tela inicial, formulário, execuções e sistema. Após avaliação visual, o dashboard redundante foi removido e a lista ganhou edição direta por modelo, com identidade azul e apresentação mais simples. A barreira `ADMIN_UI_ENABLED=1` permite avaliação local sem expor o painel por padrão. Os dados são demonstrativos e não há leitura ou gravação no SQLite/HESK. Ver `docs/11-ADMIN-UI.md`.
 
 UI-001 permanece `EM_ANDAMENTO`. Integração real, autenticação administrativa e CRUD pertencem às próximas subtarefas; a homologação final ainda não ocorreu.
