@@ -185,6 +185,8 @@ src/
 
 Cada `recurrence_execution` materializa exatamente `expected_count` itens. A abstração `TicketGateway` permite testar o motor sem carregar o HESK; sua implementação real gera e consulta tracking IDs pelo HESK, usa `hesk_newTicket()` como único caminho de criação e serializa a consulta/criação de cada tracking ID com um named lock do MariaDB. O comando `execution.php items` fornece inspeção somente leitura.
 
+Na UI-001A, `public/index.php` compõe templates de `src/Web/views/` e assets CSS/JS sem acessar o banco. A lista de rotas é fixa em `src/Web/AdminUi.php`; `ADMIN_UI_ENABLED=1` é exigido para abrir a prévia. A autenticação administrativa e a integração de dados pertencem às próximas subtarefas da UI-001.
+
 ## Modelo conceitual da recorrência
 
 Cada recorrência deverá conter, no mínimo:

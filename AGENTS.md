@@ -35,6 +35,10 @@ O Codex é o engenheiro de implementação. Em cada tarefa deve:
 - atualizar documentação afetada;
 - manter commits pequenos e rastreáveis.
 
+## Desenvolvimento visual da UI-001
+
+Tarefas de frontend/UI devem utilizar a skill de construção de sites do ChatGPT/Codex para criação e refinamento visual. Antes de integrar funcionalidades definitivas, a interface deve passar por uma etapa de avaliação visual pelo usuário. Esta regra vale para UI-001A, UI-001B, UI-001C, UI-001D, UI-001E e UI-001F sempre que houver alteração visual.
+
 ## Fluxo Git obrigatório
 
 1. Sincronizar `main`.

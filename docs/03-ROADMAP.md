@@ -12,7 +12,7 @@
 | SCH-001 | Scheduler | Detectar recorrências vencidas | CONCLUÍDO | Execução por Cron reprodutível |
 | SAFE-001 | Idempotência de execution | Proteger claim, lease e retry da mesma execution | CONCLUÍDO | Uma execution não é processada simultaneamente por dois workers; stale lease e retry preservam a mesma identidade |
 | BATCH-001 | Lotes | Gerar múltiplos tickets independentes | CONCLUÍDO | Uma execution materializa N itens persistentes; cada item possui identidade HESK rastreável, retries não recriam itens succeeded e tickets existentes são reconciliados pelo tracking ID |
-| UI-001 | Painel | Editar recorrências sem alterar código | PENDENTE | CRUD funcional e simples |
+| UI-001 | Painel | Editar recorrências sem alterar código | EM_ANDAMENTO | CRUD funcional e simples |
 | DEP-001 | cPanel | Implantar no ambiente real | PENDENTE | Deploy e Cron documentados |
 | OPS-001 | Operação | Criar manual técnico | PENDENTE | Instalação, uso, logs, falhas e recuperação documentados |
 
@@ -115,4 +115,10 @@ O run real criou os tickets HESK `44` (`XNP-1EU-SDY4`) e `45` (`S8J-V7T-N6QP`). 
 
 A reexecução foi recusada como `terminal_succeeded` e preservou execution, itens, tracking IDs, IDs dos tickets e contadores, confirmando que o lote concluído não foi recriado. O crash exato entre `hesk_newTicket()` e o sucesso no SQLite não foi provocado manualmente; lookup, reconciliação, crash recovery e named lock permanecem cobertos pelos testes automatizados.
 
-A recorrência foi desabilitada, o banco isolado e seus auxiliares foram removidos, e `storage` voltou a conter somente `app.sqlite`. O hash do banco real permaneceu `732d714ed1aacaa4ac7849bb324817f7f07dd8bcac22ab96126106eee9da9082` antes e depois. BATCH-001 está `CONCLUÍDO`; UI-001 e DEP-001 continuam `PENDENTE` e não foram iniciadas.
+A recorrência foi desabilitada, o banco isolado e seus auxiliares foram removidos, e `storage` voltou a conter somente `app.sqlite`. O hash do banco real permaneceu `732d714ed1aacaa4ac7849bb324817f7f07dd8bcac22ab96126106eee9da9082` antes e depois. BATCH-001 está `CONCLUÍDO`; naquela homologação, UI-001 e DEP-001 ainda estavam `PENDENTE` e não haviam sido iniciadas.
+
+## UI-001A — fundação visual em andamento
+
+A primeira subtarefa da UI-001 disponibiliza uma prévia web navegável com Recorrências como tela inicial, formulário, execuções e sistema. Após avaliação visual, o dashboard redundante foi removido e a lista ganhou edição direta por modelo, com identidade azul e apresentação mais simples. A barreira `ADMIN_UI_ENABLED=1` permite avaliação local sem expor o painel por padrão. Os dados são demonstrativos e não há leitura ou gravação no SQLite/HESK. Ver `docs/11-ADMIN-UI.md`.
+
+UI-001 permanece `EM_ANDAMENTO`. Integração real, autenticação administrativa e CRUD pertencem às próximas subtarefas; a homologação final ainda não ocorreu.
